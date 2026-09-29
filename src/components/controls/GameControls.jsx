@@ -5,6 +5,7 @@ function GameControls({
   gameWinner = null,
   isGameOver = false,
   isMoving = false,
+  isRolling = false,
   lastMove = null,
   lastRoll,
   onRoll = () => {},
@@ -28,7 +29,7 @@ function GameControls({
   return (
     <section className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-wa-primary/10 bg-wa-paper p-4" aria-label="Kontrol permainan">
       <div className="flex items-center gap-4">
-        <DiceButton value={lastRoll} onRoll={onRoll} disabled={isMoving || isGameOver || !turnStatus?.startsWith('Giliran Kamu')} />
+        <DiceButton value={lastRoll} rolling={isRolling} onRoll={onRoll} disabled={isMoving || isGameOver || !turnStatus?.startsWith('Giliran Kamu')} />
         <p className="text-sm text-wa-muted" aria-live="polite" role="status">{status}</p>
       </div>
       <button

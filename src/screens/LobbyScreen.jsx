@@ -20,7 +20,7 @@ function LobbyScreen({ onNavigate = () => {} }) {
         </header>
 
         <nav className="grid gap-4 rounded-2xl bg-black/15 p-5 backdrop-blur-sm md:p-6" aria-label="Navigasi menu">
-          <LobbyButton icon="▶️" variant="primary" onClick={() => onNavigate(SCREENS.GAME)}>
+          <LobbyButton icon="▶️" variant="primary" onClick={() => onNavigate(SCREENS.SETUP)}>
             Start Game
           </LobbyButton>
           <LobbyButton icon="⚙️" onClick={() => onNavigate(SCREENS.SETTINGS)}>

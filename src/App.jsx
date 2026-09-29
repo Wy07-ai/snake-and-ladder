@@ -3,13 +3,19 @@ import GameScreen from './screens/GameScreen.jsx'
 import HowToPlayScreen from './screens/HowToPlayScreen.jsx'
 import LobbyScreen from './screens/LobbyScreen.jsx'
 import SettingsScreen from './screens/SettingsScreen.jsx'
+import SetupScreen from './screens/SetupScreen.jsx'
+import { useAudioSync } from './audio/useAudioSync.js'
 import { SCREENS, useNavigation } from './hooks/useNavigation.js'
 
-// App hanya bertugas memilih layar aktif. Logic permainan ada di GameScreen/useGame.
+// App memilih layar aktif dan menyalakan audio global (musik latar mengikuti
+// Settings di semua layar). Logic permainan ada di GameScreen/useGame.
 function App() {
   const { screen, navigate, goToLobby } = useNavigation()
+  useAudioSync()
 
   switch (screen) {
+    case SCREENS.SETUP:
+      return <SetupScreen onBack={goToLobby} onStart={() => navigate(SCREENS.GAME)} />
     case SCREENS.GAME:
       return <GameScreen onBackToLobby={goToLobby} />
     case SCREENS.HOW_TO_PLAY:

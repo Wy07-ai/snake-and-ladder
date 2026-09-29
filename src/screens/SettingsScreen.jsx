@@ -1,20 +1,25 @@
+import PawnCustomizer from '../components/customize/PawnCustomizer.jsx'
+import ThemePicker from '../components/customize/ThemePicker.jsx'
 import ScreenShell from '../components/screens/ScreenShell.jsx'
 import SettingsSection from '../components/settings/SettingsSection.jsx'
 import ToggleSwitch from '../components/settings/ToggleSwitch.jsx'
 import VolumeSlider from '../components/settings/VolumeSlider.jsx'
+import { playSfx } from '../audio/audioEngine.js'
 import { useSettings } from '../settings/useSettings.js'
 
+// `sample`: suara contoh yang diputar saat slider dilepas. BGM tidak butuh
+// contoh karena musiknya sendiri sudah terdengar berubah.
 const VOLUME_CONTROLS = [
-  { channel: 'master', label: '🔊 Master Volume' },
-  { channel: 'bgm', label: '🎵 BGM Volume' },
-  { channel: 'sfx', label: '🎲 SFX Volume' },
+  { channel: 'master', label: '🔊 Master Volume', sample: 'notification' },
+  { channel: 'bgm', label: '🎵 BGM Volume', sample: null },
+  { channel: 'sfx', label: '🎲 SFX Volume', sample: 'diceRoll' },
 ]
 
-// Layar pengaturan. Saat ini hanya menyimpan nilai (lihat src/settings);
-// belum ada audio engine yang memakainya. Kelompok baru = tambah <SettingsSection>.
+// Layar pengaturan. Nilai disimpan di src/settings dan dibaca audio engine
+// (useAudioSync) serta layar permainan. Kelompok baru = tambah <SettingsSection>.
 function SettingsScreen({ onBack }) {
-  const { settings, setVolume, toggleMute, resetSettings } = useSettings()
-  const { audio } = settings
+  const { settings, setVolume, toggleMute, setPawn, setTheme, resetSettings } = useSettings()
+  const { audio, visual } = settings
 
   return (
     <ScreenShell title="Settings" icon="⚙️" onBack={onBack}>
@@ -22,7 +27,7 @@ function SettingsScreen({ onBack }) {
         id="audio"
         icon="🔊"
         title="Audio"
-        description="Atur volume suara permainan. Efek suara & musik akan menyusul di pembaruan berikutnya."
+        description="Atur volume musik latar dan efek suara (kocokan dadu, langkah pion, tangga, ular, dan notifikasi chat)."
       >
         <ToggleSwitch
           label={audio.muted ? 'Suara dimatikan (Muted)' : 'Suara menyala (Unmuted)'}
@@ -32,12 +37,13 @@ function SettingsScreen({ onBack }) {
           offText="Ketuk untuk unmute"
         />
         <div className="grid gap-4">
-          {VOLUME_CONTROLS.map(({ channel, label }) => (
+          {VOLUME_CONTROLS.map(({ channel, label, sample }) => (
             <VolumeSlider
               key={channel}
               label={label}
               value={audio[channel]}
               onChange={(value) => setVolume(channel, value)}
+              onCommit={sample ? () => playSfx(sample) : undefined}
               dimmed={audio.muted}
             />
           ))}
@@ -45,14 +51,16 @@ function SettingsScreen({ onBack }) {
       </SettingsSection>
 
       <SettingsSection
-        id="visual"
-        icon="🎨"
-        title="Gameplay / Visual"
-        description="Tema, avatar, dan tampilan permainan akan ditambahkan di tahap berikutnya."
+        id="pawn"
+        icon="♟️"
+        title="Bidak"
+        description="Karakter, warna, dan bentuk bidakmu. Bisa juga diubah sebelum permainan dimulai."
       >
-        <p className="rounded-lg border border-dashed border-wa-muted/50 px-4 py-3 text-sm text-wa-muted">
-          Belum ada opsi visual. Bagian ini disiapkan untuk pengaturan selanjutnya.
-        </p>
+        <PawnCustomizer pawn={visual.pawn} onChange={setPawn} />
+      </SettingsSection>
+
+      <SettingsSection id="visual" icon="🎨" title="Tema papan" description="Pilih tampilan papan untuk permainan berikutnya.">
+        <ThemePicker value={visual.theme} onChange={setTheme} />
       </SettingsSection>
 
       <button

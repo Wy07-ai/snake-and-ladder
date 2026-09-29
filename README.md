@@ -11,7 +11,10 @@ Game **Ular Tangga** berbasis React yang menghadirkan permainan papan klasik den
   - **Bagas** — meme dan santuy
   - **Davin** — kalkulatif dan dingin
 - 💬 **Chat interaktif** yang merespons kejadian dalam permainan
-- 🎯 Animasi perpindahan pion per kotak
+- 🎯 Animasi perpindahan pion per kotak, dadu yang berguncang, dan pion yang meluncur di tangga/ular
+- 🧸 **Bidak kustom**: pilih karakter 2D (kucing, kelinci, alien, hantu, astronot, katak), warna, dan bentuk sebelum bermain
+- 🎨 **3 tema papan**: Classic, Cyberpunk, dan Jungle
+- 🔊 **Suara & musik**: kocokan dadu, langkah pion, naik tangga, terperosok ular, notifikasi chat "Ting!", dan musik latar santai (disintesis lewat kode, tanpa file audio)
 - 🏆 Kondisi kemenangan saat pemain mencapai kotak **100**
 - 🔄 Tombol **Mulai ulang** untuk mengatur permainan dari awal
 - 📱 Tampilan responsif untuk berbagai ukuran layar
@@ -30,20 +33,29 @@ Game **Ular Tangga** berbasis React yang menghadirkan permainan papan klasik den
 src/
 ├── assets/          # Asset gambar dan icon
 ├── components/
-│   ├── board/       # Papan dan kotak permainan
+│   ├── board/       # Papan bertema, ular/tangga, dan bidak di papan
 │   ├── chat/        # Panel dan pesan chat
-│   └── controls/    # Tombol dadu dan kontrol game
+│   ├── controls/    # Dadu, kontrol game, dan daftar pemain
+│   ├── customize/   # Pemilih bidak dan tema papan
+│   └── pawn/        # Bidak dan gambar karakter SVG
+├── audio/
+│   ├── audioEngine.js   # SFX dan musik latar (Web Audio)
+│   └── useAudioSync.js  # Menghubungkan Settings dengan audio
 ├── data/
 │   ├── boardData.js     # Data ular & tangga
+│   ├── boardThemes.js   # Daftar tema papan
+│   ├── pawnOptions.js   # Karakter, warna, dan bentuk bidak
 │   ├── botPersonas.js   # Persona bot
 │   └── chatTriggers.js  # Respons chat berdasarkan event
 ├── engine/
-│   └── gameEngine.js    # Aturan dan logika dasar permainan
+│   ├── gameEngine.js    # Aturan dan logika dasar permainan
+│   └── boardGeometry.js # Posisi kotak, bentuk ular & tangga
 ├── hooks/
 │   ├── useGame.js       # State dan alur permainan
 │   └── useAutoChat.js   # Sistem chat otomatis
 ├── styles/
-│   └── theme.css
+│   ├── theme.css
+│   └── board.css        # Papan, tema papan, dan animasi dadu
 ├── App.jsx
 ├── index.css
 └── main.jsx

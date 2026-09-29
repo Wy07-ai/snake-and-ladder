@@ -10,6 +10,8 @@ const FALLBACK = {
   settings: sanitizeSettings(null),
   setVolume: noop,
   toggleMute: noop,
+  setTheme: noop,
+  setPawn: noop,
   resetSettings: noop,
 }
 

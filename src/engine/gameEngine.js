@@ -1,11 +1,31 @@
 import { ladders, snakes } from '../data/boardData.js'
+import { DEFAULT_PAWN } from '../data/pawnOptions.js'
 
-export const GAME_PLAYERS = [
-  { id: 'human', name: 'Kamu', type: 'human', marker: 'K', color: '#075e54' },
-  { id: 'rizky', name: 'Rizky', type: 'bot', marker: 'R', color: '#c92a2a' },
-  { id: 'bagas', name: 'Bagas', type: 'bot', marker: 'B', color: '#e67700' },
-  { id: 'davin', name: 'Davin', type: 'bot', marker: 'D', color: '#1971c2' },
+// Jeda animasi (ms). Dipakai useGame; lama SFX kocokan dadu dan luncuran
+// tangga/ular di src/audio dibuat mengikuti angka ini.
+export const DICE_ROLL_MS = 700
+export const SPECIAL_MOVE_MS = 800
+
+// Bot punya karakter, bentuk, dan warna tetap.
+export const BOT_PLAYERS = [
+  { id: 'rizky', name: 'Rizky', type: 'bot', avatar: 'fox', shape: 'shield', color: '#c92a2a' },
+  { id: 'bagas', name: 'Bagas', type: 'bot', avatar: 'panda', shape: 'hexagon', color: '#e67700' },
+  { id: 'davin', name: 'Davin', type: 'bot', avatar: 'robot', shape: 'square', color: '#1971c2' },
 ]
+
+// Susun daftar pemain: bidak pemain manusia mengikuti pilihan (avatar, bentuk, warna).
+export function createPlayers(pawn = DEFAULT_PAWN) {
+  return [
+    { id: 'human', name: 'Kamu', type: 'human', ...DEFAULT_PAWN, ...pawn },
+    ...BOT_PLAYERS,
+  ]
+}
+
+export const GAME_PLAYERS = createPlayers()
+
+export function createStartPositions(players = GAME_PLAYERS) {
+  return Object.fromEntries(players.map((player) => [player.id, 1]))
+}
 
 export function rollDice(random = Math.random) {
   return Math.floor(random() * 6) + 1

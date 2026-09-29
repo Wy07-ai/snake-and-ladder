@@ -4,9 +4,9 @@ Planned work is grouped by priority. Items are proposals and may change as the p
 
 ## Next
 
-- **Sound effects:** Add optional dice-roll, movement, ladder, snake, and notification sounds with a mute control. Volume and mute settings already exist; the audio engine should read them via `getEffectiveVolume`.
-- **Custom avatars:** Let players choose or personalize their pawn and chat avatar.
-- **Theme selection:** Add a dark/light theme toggle and remember the selected preference.
+- **Chat avatars:** Reuse the chosen pawn character as the player's chat avatar and in the chat header.
+- **Dark/light UI mode:** Add a dark/light toggle for the app chrome (board themes are already selectable) and remember the preference.
+- **Richer audio:** Optionally replace synthesized sounds with recorded assets, add a second background track, and add short UI sounds for menus.
 
 ## Later
 

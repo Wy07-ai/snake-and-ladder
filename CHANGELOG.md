@@ -13,8 +13,20 @@ All notable changes to this project are documented here. The format follows [Kee
 - Reusable settings UI: `SettingsSection`, `VolumeSlider`, and `ToggleSwitch`.
 - "Menu utama" button in the game screen to return to the lobby.
 
+- Custom pawns: nine 2D SVG characters with a glossy 3D-style finish replace the letter circles (K, R, B, D). Players choose one of six characters, one of eight colors, and one of four shapes (circle, square, hexagon, shield) with a live preview. Bots keep fixed characters (fox, panda, robot).
+- Pre-game "Siapkan Permainan" screen between the lobby and the game for choosing the pawn and board theme. The same pickers also appear in Settings.
+- Three board themes: Classic, Cyberpunk (neon glow), and Jungle. Snakes are now drawn as wavy snakes with heads and tongues, and ladders as real ladders with rungs. Theme previews use the real board.
+- Sound: a Web Audio engine (`src/audio`) that synthesizes every sound, so no audio files are needed. Includes dice-rattle, per-square step, ladder-climb, snake-slide, chat "ting", and win sounds, plus a relaxed looping background track. Volume, BGM/SFX levels, and mute from Settings now take effect; a quick mute button was added to the game screen.
+- Dice now show pips, shake while rolling, and reveal the result after a short roll animation.
+- Player list under the board showing each pawn, name, square, and whose turn it is.
+
 ### Changed
 - Game UI moved from `App` into `GameScreen`; gameplay behavior is unchanged.
+- "Start Game" now opens the setup screen; the game starts from its "Mulai Bermain" button.
+- `useGame` takes `players` and an optional `onSfx` callback; pawns that take a ladder or snake glide slowly and the turn waits until the slide and sound finish.
+- Settings `visual` now stores `theme` and `pawn`. Values outside the official lists fall back to defaults.
+- Board rendering split into `BoardView`, `Connections`, and `engine/boardGeometry.js`; board colors are CSS variables in `styles/board.css`.
+- Audio pauses while the browser tab is hidden and starts only after the first click or tap, as browsers require.
 
 ## [0.4.0] - 2026-09-29 - Phase 4
 

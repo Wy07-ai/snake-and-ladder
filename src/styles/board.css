@@ -1,0 +1,250 @@
+/* Papan permainan + tema. Semua warna papan berupa CSS variable; tema baru
+   cukup menambah blok [data-board-theme='...'] dan satu entri di
+   src/data/boardThemes.js. Tema default (classic) ada di selector .board. */
+
+.board {
+  --board-frame: #075e54;
+  --board-frame-width: 4px;
+  --board-bg: #ffffff;
+  --board-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --board-font: inherit;
+
+  --cell-a: #ffffff;
+  --cell-b: #dcf8c6;
+  --cell-ladder: #d1fae5;
+  --cell-snake: #ffe4e6;
+  --cell-ink: #172b28;
+  --cell-line: rgba(7, 94, 84, 0.1);
+  --cell-text-shadow: 0 0 3px var(--cell-a), 0 0 3px var(--cell-a);
+
+  --badge-ladder: #047857;
+  --badge-snake: #be123c;
+  --badge-ink: #ffffff;
+
+  --ladder-rail: #087f5b;
+  --ladder-rung: #12b886;
+  --ladder-glow: none;
+  --snake-body: #be3455;
+  --snake-belly: #ff8fa3;
+  --snake-eye: #ffffff;
+  --snake-tongue: #e03131;
+  --snake-glow: none;
+
+  overflow: hidden;
+  border: var(--board-frame-width) solid var(--board-frame);
+  border-radius: 0.5rem;
+  background: var(--board-bg);
+  box-shadow: var(--board-shadow);
+  font-family: var(--board-font);
+}
+
+.board[data-board-theme='cyberpunk'] {
+  --board-frame: #ff2bd6;
+  --board-bg: #0a0d24;
+  --board-shadow: 0 0 18px rgba(255, 43, 214, 0.45), 0 0 4px rgba(0, 245, 255, 0.6);
+  --board-font: 'Courier New', ui-monospace, monospace;
+
+  --cell-a: #0f1330;
+  --cell-b: #171b46;
+  --cell-ladder: #0d3040;
+  --cell-snake: #3d0f37;
+  --cell-ink: #8ff6ff;
+  --cell-line: rgba(0, 245, 255, 0.18);
+  --cell-text-shadow: 0 0 3px #0f1330, 0 0 3px #0f1330, 0 0 7px rgba(0, 245, 255, 0.55);
+
+  --badge-ladder: #00d5e0;
+  --badge-snake: #ff2bd6;
+  --badge-ink: #06121a;
+
+  --ladder-rail: #00f5ff;
+  --ladder-rung: #8dffff;
+  --ladder-glow: drop-shadow(0 0 1.2px #00f5ff);
+  --snake-body: #ff2bd6;
+  --snake-belly: #ffe600;
+  --snake-eye: #ffe600;
+  --snake-tongue: #00f5ff;
+  --snake-glow: drop-shadow(0 0 1.4px #ff2bd6);
+}
+
+.board[data-board-theme='jungle'] {
+  --board-frame: #5b3a1a;
+  --board-bg: #dff0b8;
+  --board-shadow: 0 2px 6px rgba(43, 93, 52, 0.35);
+  --board-font: 'Trebuchet MS', 'Segoe UI', sans-serif;
+
+  --cell-a: #eaf6c8;
+  --cell-b: #c9e493;
+  --cell-ladder: #f1dfb0;
+  --cell-snake: #ffd8a8;
+  --cell-ink: #1f3d1c;
+  --cell-line: rgba(43, 93, 52, 0.22);
+
+  --badge-ladder: #8b5a2b;
+  --badge-snake: #2b8a3e;
+  --badge-ink: #ffffff;
+
+  --ladder-rail: #7a4a1e;
+  --ladder-rung: #b47a3c;
+  --snake-body: #237a35;
+  --snake-belly: #c0eb75;
+  --snake-eye: #fff59d;
+  --snake-tongue: #e03131;
+}
+
+.board-cell {
+  position: relative;
+  display: flex;
+  aspect-ratio: 1;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cell-line);
+  background: var(--cell-a);
+  color: var(--cell-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Angka kotak berada di atas lapisan ular/tangga (z-10) tetapi di bawah bidak (z-20),
+   dengan halo tipis agar tetap terbaca saat tertimpa badan ular. */
+.board-cell > span:first-child {
+  position: relative;
+  z-index: 15;
+  text-shadow: var(--cell-text-shadow);
+}
+
+.board-cell[data-tone='b'] {
+  background: var(--cell-b);
+}
+
+/* Diletakkan setelah data-tone agar warna kotak ular/tangga menang. */
+.board-cell[data-feature='ladder'] {
+  background: var(--cell-ladder);
+}
+
+.board-cell[data-feature='snake'] {
+  background: var(--cell-snake);
+}
+
+.board-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  width: 1rem;
+  height: 1rem;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--badge-ladder);
+  color: var(--badge-ink);
+  font-size: 9px;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.board-badge[data-kind='snake'] {
+  background: var(--badge-snake);
+}
+
+.board-flag {
+  position: absolute;
+  bottom: 1px;
+  left: 2px;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+@media (min-width: 640px) {
+  .board-cell {
+    font-size: 0.875rem;
+  }
+
+  .board-badge {
+    top: 4px;
+    right: 4px;
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 10px;
+  }
+}
+
+/* Ular & tangga (SVG di atas papan). */
+.board-conn--ladder {
+  filter: var(--ladder-glow);
+}
+
+.board-conn--snake {
+  filter: var(--snake-glow);
+}
+
+.board-ladder-rail {
+  stroke: var(--ladder-rail);
+  stroke-width: 0.7;
+  stroke-linecap: round;
+}
+
+.board-ladder-rung {
+  stroke: var(--ladder-rung);
+  stroke-width: 0.5;
+  stroke-linecap: round;
+}
+
+.board-snake-body {
+  stroke: var(--snake-body);
+  stroke-width: 2;
+}
+
+.board-snake-belly {
+  stroke: var(--snake-belly);
+  stroke-width: 0.7;
+  stroke-dasharray: 1.2 1.7;
+}
+
+.board-snake-body-fill {
+  fill: var(--snake-body);
+}
+
+.board-snake-eye {
+  fill: var(--snake-eye);
+}
+
+.board-snake-tongue {
+  stroke: var(--snake-tongue);
+  stroke-width: 0.35;
+  stroke-linecap: round;
+  fill: none;
+}
+
+/* Pratinjau kecil di pemilih tema: hanya pola warna, tanpa angka. */
+.board--compact {
+  --board-frame-width: 2px;
+  border-radius: 0.375rem;
+  box-shadow: none;
+}
+
+.board--compact .board-cell {
+  border-width: 0;
+}
+
+.board--compact .board-cell > * {
+  display: none;
+}
+
+/* Dadu berguncang saat dilempar. */
+@keyframes dice-shake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-3px, 2px) rotate(-12deg); }
+  40% { transform: translate(3px, -2px) rotate(10deg); }
+  60% { transform: translate(-2px, -3px) rotate(-8deg); }
+  80% { transform: translate(2px, 3px) rotate(9deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.dice-rolling {
+  animation: dice-shake 0.35s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-rolling {
+    animation: none;
+  }
+}

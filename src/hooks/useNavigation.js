@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 
 export const SCREENS = {
   LOBBY: 'lobby',
+  SETUP: 'setup',
   GAME: 'game',
   HOW_TO_PLAY: 'how-to-play',
   SETTINGS: 'settings',

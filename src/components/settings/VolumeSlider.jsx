@@ -2,7 +2,8 @@ import { useId } from 'react'
 
 // Slider volume 0-100 dengan label & persentase. `dimmed` menandai channel
 // yang sedang tidak terdengar (mis. saat mute) tanpa menguncinya.
-function VolumeSlider({ label, value, onChange, dimmed = false }) {
+// `onCommit` dipanggil saat slider dilepas, cocok untuk memutar suara contoh.
+function VolumeSlider({ label, value, onChange, onCommit, dimmed = false }) {
   const id = useId()
 
   return (
@@ -22,6 +23,8 @@ function VolumeSlider({ label, value, onChange, dimmed = false }) {
         step="1"
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
+        onPointerUp={onCommit}
+        onKeyUp={onCommit}
         aria-valuetext={`${value} persen`}
       />
     </div>

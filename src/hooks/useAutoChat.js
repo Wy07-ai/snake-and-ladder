@@ -14,7 +14,8 @@ function createMessage({ author, avatar = null, color = null, text, type }) {
   }
 }
 
-export function useAutoChat() {
+// `onIncomingMessage` dipanggil tiap pesan bot muncul (dipakai untuk bunyi "Ting!").
+export function useAutoChat({ onIncomingMessage } = {}) {
   const [messages, setMessages] = useState([
     createMessage({
       author: 'Ular Tangga',
@@ -27,6 +28,7 @@ export function useAutoChat() {
   const isTypingRef = useRef(false)
   const timerRef = useRef(null)
   const processNextRef = useRef(null)
+  const onIncomingRef = useRef(onIncomingMessage)
 
   const processNext = useCallback(() => {
     if (isTypingRef.current) return
@@ -40,6 +42,7 @@ export function useAutoChat() {
 
     timerRef.current = window.setTimeout(() => {
       setMessages((currentMessages) => [...currentMessages, nextMessage.message])
+      onIncomingRef.current?.(nextMessage.message)
       isTypingRef.current = false
       setTypingPersona(null)
       processNextRef.current?.()
@@ -49,6 +52,10 @@ export function useAutoChat() {
   useEffect(() => {
     processNextRef.current = processNext
   }, [processNext])
+
+  useEffect(() => {
+    onIncomingRef.current = onIncomingMessage
+  }, [onIncomingMessage])
 
   const triggerEvent = useCallback((eventName, player) => {
     const reactions = CHAT_TRIGGERS[eventName]
