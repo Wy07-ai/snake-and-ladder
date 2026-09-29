@@ -30,7 +30,7 @@ function LobbyScreen({ onNavigate = () => {} }) {
             How to Play
           </LobbyButton>
           <LobbyButton icon="🚪" onClick={() => onNavigate(SCREENS.EXIT)}>
-            Exit
+            Exit / Quit
           </LobbyButton>
         </nav>
       </section>
