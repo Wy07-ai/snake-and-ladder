@@ -3,6 +3,7 @@ import PawnCustomizer from '../components/customize/PawnCustomizer.jsx'
 import ThemePicker from '../components/customize/ThemePicker.jsx'
 import ScreenShell from '../components/screens/ScreenShell.jsx'
 import LayoutModePicker from '../components/settings/LayoutModePicker.jsx'
+import FinishModePicker from '../components/settings/FinishModePicker.jsx'
 import SettingsSection from '../components/settings/SettingsSection.jsx'
 import ToggleSwitch from '../components/settings/ToggleSwitch.jsx'
 import VolumeSlider from '../components/settings/VolumeSlider.jsx'
@@ -20,7 +21,7 @@ const VOLUME_CONTROLS = [
 // Layar pengaturan. Nilai disimpan di src/settings dan dibaca audio engine
 // (useAudioSync) serta layar permainan. Kelompok baru = tambah <SettingsSection>.
 function SettingsScreen({ onBack }) {
-  const { settings, setVolume, toggleMute, setName, setPawn, setTheme, setLayoutMode, resetSettings } = useSettings()
+  const { settings, setVolume, toggleMute, setName, setPawn, setTheme, setLayoutMode, setGameSettings, resetSettings } = useSettings()
   const { audio, layout, visual } = settings
 
   return (
@@ -50,6 +51,18 @@ function SettingsScreen({ onBack }) {
             />
           ))}
         </div>
+      </SettingsSection>
+
+      <SettingsSection
+        id="finish-mode"
+        icon="🏁"
+        title="Finish Mode"
+        description="Tentukan kapan permainan berakhir dan bagaimana peringkat pemain ditetapkan."
+      >
+        <FinishModePicker
+          value={settings.game.finishMode}
+          onChange={(finishMode) => setGameSettings({ finishMode })}
+        />
       </SettingsSection>
 
       <SettingsSection

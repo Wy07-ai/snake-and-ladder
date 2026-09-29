@@ -5,6 +5,7 @@
 import { BOARD_PRESET_IDS, DEFAULT_PRESET_ID } from '../data/boardPresets.js'
 import { BOARD_THEMES, DEFAULT_BOARD_THEME } from '../data/boardThemes.js'
 import { DEFAULT_LAYOUT_MODE, LAYOUT_MODES, MOBILE_MAX_WIDTH_QUERY } from '../data/layoutModes.js'
+import { DEFAULT_FINISH_MODE, FINISH_MODES } from '../data/finishModes.js'
 import { DEFAULT_PAWN, HUMAN_AVATARS, PAWN_COLORS, PAWN_SHAPES } from '../data/pawnOptions.js'
 import { DEFAULT_NAMES, NAME_IDS, NAME_MAX_LENGTH } from '../data/playerNames.js'
 
@@ -38,6 +39,7 @@ export const DEFAULT_SETTINGS = {
     playerCount: 4,
     playerTypes: DEFAULT_PLAYER_TYPES,
     difficulty: 'medium',
+    finishMode: DEFAULT_FINISH_MODE,
     // Preset papan (id dari data/boardPresets.js); 'random' = papan acak tiap game baru.
     boardPreset: DEFAULT_PRESET_ID,
   },
@@ -143,6 +145,7 @@ export function sanitizeSettings(raw, fallbackLayoutMode = DEFAULT_LAYOUT_MODE) 
           : DEFAULT_PLAYER_TYPES[index],
       ),
       difficulty: BOT_DIFFICULTIES.includes(game.difficulty) ? game.difficulty : DEFAULT_SETTINGS.game.difficulty,
+      finishMode: pickId(game.finishMode, FINISH_MODES, DEFAULT_FINISH_MODE),
       // Data lama (tanpa boardPreset) atau id yang sudah dihapus kembali ke preset default.
       boardPreset: BOARD_PRESET_IDS.includes(game.boardPreset) ? game.boardPreset : DEFAULT_SETTINGS.game.boardPreset,
     },

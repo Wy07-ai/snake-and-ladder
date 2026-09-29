@@ -16,6 +16,25 @@ const playDialogBlip = () => playSfx('dialog')
 const OUTLINE_BUTTON =
   'rounded-md border border-wa-primary font-semibold text-wa-primary transition hover:bg-wa-soft active:scale-95 disabled:cursor-not-allowed disabled:opacity-60'
 
+function Leaderboard({ entries }) {
+  if (!entries.length) return null
+
+  return (
+    <section className="grid gap-2 rounded-lg border border-wa-primary/15 bg-wa-paper p-3" aria-label="Papan peringkat">
+      <h2 className="text-sm font-bold text-wa-ink">Papan peringkat</h2>
+      <ol className="grid gap-1">
+        {entries.map((entry) => (
+          <li key={entry.id} className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 border-t border-wa-soft py-1.5 text-sm">
+            <span className="font-bold text-wa-primary">{entry.place}.</span>
+            <span className="truncate font-semibold text-wa-ink">{entry.name}</span>
+            <span className="text-xs text-wa-muted">Kotak {entry.position}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
 // Layar permainan. Hook game & dialog dipasang di sini (bukan di App), sehingga
 // setiap kali pemain menekan Start Game, permainan dimulai dari state bersih
 // dan tidak ada timer bot yang berjalan saat pemain berada di lobby.
@@ -53,6 +72,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
   const {
     currentPlayer,
     extraRollAvailable,
+    leaderboard,
     gameWinner,
     isGameOver,
     isMoving,
@@ -66,7 +86,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
     rollingValue,
     slidingPlayerId,
     turnStatus,
-  } = useGame({ players, board, difficulty: settings.game.difficulty, onGameEvent: triggerEvent, onSfx: playSfx })
+  } = useGame({ players, board, difficulty: settings.game.difficulty, finishMode: settings.game.finishMode, onGameEvent: triggerEvent, onSfx: playSfx })
 
   const handleReset = () => {
     if (isMoving) return
@@ -151,6 +171,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
         {boardSection}
         <RpgDialog compact line={line} players={players} />
         {playerList}
+        <Leaderboard entries={leaderboard} />
         {controls}
       </main>
     )
@@ -181,9 +202,10 @@ function GameScreen({ onBackToLobby = () => {} }) {
           header ~5.5rem) dan sidebar 19-28rem, keduanya dipusatkan. Dialog bot tepat di bawah dadu. */}
       <div className="grid min-h-0 grid-cols-[min(calc(max(100dvh,32rem)-5.5rem),calc(100%-20rem))_minmax(19rem,28rem)] justify-center gap-4">
         {boardSection}
-        <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-3">
+        <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-3">
           {playerList}
           {controls}
+          <Leaderboard entries={leaderboard} />
           <RpgDialog className="self-start" line={line} players={players} />
         </div>
       </div>

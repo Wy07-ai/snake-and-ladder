@@ -13,6 +13,7 @@ const FALLBACK = {
   toggleMute: noop,
   setTheme: noop,
   setPawn: noop,
+  setGameSettings: noop,
   setLayoutMode: noop,
   setName: noop,
   resetSettings: noop,

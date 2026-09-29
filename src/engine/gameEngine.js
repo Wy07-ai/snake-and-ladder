@@ -68,6 +68,36 @@ export function getNextPlayerIndex(currentIndex, playerCount = GAME_PLAYERS.leng
   return (currentIndex + 1) % playerCount
 }
 
+export function getNextActivePlayerIndex(currentIndex, players, finishedPlayerIds) {
+  const finished = new Set(finishedPlayerIds)
+  for (let offset = 1; offset <= players.length; offset += 1) {
+    const index = (currentIndex + offset) % players.length
+    if (!finished.has(players[index].id)) return index
+  }
+  return currentIndex
+}
+
+export function getQuickFinishStandings(players, positions, winnerId) {
+  const winner = players.find((player) => player.id === winnerId)
+  const remainingPlayers = players
+    .filter((player) => player.id !== winnerId)
+    .sort((a, b) => positions[b.id] - positions[a.id])
+
+  return [winner, ...remainingPlayers].map((player, index) => ({
+    ...player,
+    place: index + 1,
+    position: positions[player.id],
+  }))
+}
+
+export function getFinishedStandings(finishedPlayerIds, players) {
+  const playerById = new Map(players.map((player) => [player.id, player]))
+  return finishedPlayerIds.flatMap((id, index) => {
+    const player = playerById.get(id)
+    return player ? [{ ...player, place: index + 1, position: 100 }] : []
+  })
+}
+
 export function getBotThinkDelay(difficulty = 'medium', random = Math.random) {
   if (typeof difficulty === 'function') {
     random = difficulty

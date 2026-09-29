@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DEFAULT_BOARD } from '../data/boardPresets.js'
+import { DEFAULT_FINISH_MODE } from '../data/finishModes.js'
 import {
   DICE_ROLL_MS,
   GAME_PLAYERS,
@@ -7,9 +8,12 @@ import {
   createStartPositions,
   findPassedPlayers,
   getBotThinkDelay,
+  getFinishedStandings,
   getMovementSteps,
   hasBonusRoll,
+  getNextActivePlayerIndex,
   getNextPlayerIndex,
+  getQuickFinishStandings,
   resolveSpecialSquare,
   rollDice,
 } from '../engine/gameEngine.js'
@@ -41,7 +45,7 @@ function nextPaint() {
 // LADDER_CLIMB, SNAKE_BITE, CLUTCH_ZONE, OVERTAKE dengan `extra.target`, GAME_OVER).
 // `onSfx` melaporkan momen untuk efek suara: 'diceRoll', 'step', 'ladder',
 // 'snake', dan 'win'. Keduanya opsional; hook ini tidak tahu apa pun soal audio.
-export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficulty = 'medium', onGameEvent = noop, onSfx = noop } = {}) {
+export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficulty = 'medium', finishMode = DEFAULT_FINISH_MODE, onGameEvent = noop, onSfx = noop } = {}) {
   const [playerPositions, setPlayerPositions] = useState(() => createStartPositions(players))
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [lastRoll, setLastRoll] = useState(null)
@@ -52,6 +56,8 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
   const [lastMove, setLastMove] = useState(null)
   const [slidingPlayerId, setSlidingPlayerId] = useState(null)
   const [gameWinner, setGameWinner] = useState(null)
+  const [finishedPlayerIds, setFinishedPlayerIds] = useState([])
+  const [finalStandings, setFinalStandings] = useState([])
   const isMovingRef = useRef(false)
   const diceStreaksRef = useRef({})
   const currentPlayer = players[currentPlayerIndex]
@@ -130,10 +136,28 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
       }
 
       if (position === 100) {
-        setGameWinner(currentPlayer)
         setExtraRollAvailable(false)
         onSfx('win')
-        onGameEvent('GAME_OVER', currentPlayer)
+        if (finishMode === 'quick') {
+          setFinalStandings(getQuickFinishStandings(
+            players,
+            { ...playerPositions, [currentPlayer.id]: position },
+            currentPlayer.id,
+          ))
+          setGameWinner(currentPlayer)
+          onGameEvent('GAME_OVER', currentPlayer)
+        } else {
+          const nextFinishedPlayerIds = [...finishedPlayerIds, currentPlayer.id]
+          setFinishedPlayerIds(nextFinishedPlayerIds)
+          if (nextFinishedPlayerIds.length === playerCount) {
+            const winner = players.find((player) => player.id === nextFinishedPlayerIds[0])
+            setFinalStandings(getFinishedStandings(nextFinishedPlayerIds, players))
+            setGameWinner(winner)
+            onGameEvent('GAME_OVER', winner)
+          } else {
+            setCurrentPlayerIndex(getNextActivePlayerIndex(currentPlayerIndex, players, nextFinishedPlayerIds))
+          }
+        }
       } else if (hasBonusRoll(dice)) {
         setExtraRollAvailable(true)
       } else {
@@ -147,7 +171,7 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
       setRollingValue(null)
       setSlidingPlayerId(null)
     }
-  }, [board, currentPlayer, isGameOver, onGameEvent, onSfx, playerCount, playerPosition, playerPositions, players])
+  }, [board, currentPlayer, currentPlayerIndex, finishMode, finishedPlayerIds, isGameOver, onGameEvent, onSfx, playerCount, playerPosition, playerPositions, players])
 
   useEffect(() => {
     if (currentPlayer.type !== 'bot' || isMoving || isGameOver) return undefined
@@ -166,6 +190,8 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
     setLastRoll(null)
     diceStreaksRef.current = {}
     setExtraRollAvailable(false)
+    setFinishedPlayerIds([])
+    setFinalStandings([])
     setLastMove(null)
     setGameWinner(null)
   }
@@ -182,9 +208,17 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
           ? `${currentPlayer.name} mendapat lemparan ekstra, sedang berpikir...`
           : `${currentPlayer.name} sedang berpikir...`
 
+  const leaderboard = finalStandings.length
+    ? finalStandings
+    : finishMode === 'play-to-end'
+      ? getFinishedStandings(finishedPlayerIds, players)
+      : []
+
   return {
     currentPlayer,
     extraRollAvailable,
+    finishMode,
+    leaderboard,
     gameWinner,
     isGameOver,
     isMoving,
