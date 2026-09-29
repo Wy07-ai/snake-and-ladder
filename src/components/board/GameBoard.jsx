@@ -32,8 +32,20 @@ const connections = [
   ...snakes.map((connection) => ({ ...connection, type: 'snake' })),
 ]
 
-function GameBoard({ playerPosition = 1 }) {
-  const pawn = getSquareCenter(playerPosition)
+const DEFAULT_PLAYER = { id: 'human', name: 'Kamu', marker: 'K', color: '#075e54' }
+const pawnOffsets = [
+  { x: -2, y: -2 },
+  { x: 2, y: -2 },
+  { x: -2, y: 2 },
+  { x: 2, y: 2 },
+]
+
+function GameBoard({ playerPosition = 1, playerPositions = {}, players = [DEFAULT_PLAYER] }) {
+  const pawns = players.map((player, index) => ({
+    ...player,
+    position: playerPositions[player.id] ?? playerPosition,
+    offset: pawnOffsets[index % pawnOffsets.length],
+  }))
 
   return (
     <div className="overflow-hidden rounded-lg border-4 border-wa-primary bg-wa-paper shadow-sm">
@@ -67,14 +79,25 @@ function GameBoard({ playerPosition = 1 }) {
             )
           })}
         </svg>
-        <span
-          className="pointer-events-none absolute z-20 grid size-[6%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-wa-primary text-[0.5rem] font-bold text-white shadow-md transition-[left,top] duration-150 ease-in-out sm:size-[5%] sm:text-xs"
-          style={{ left: `${pawn.x}%`, top: `${pawn.y}%` }}
-          aria-label={`Pion berada di kotak ${playerPosition}`}
-          role="img"
-        >
-          P
-        </span>
+        {pawns.map((pawn) => {
+          const center = getSquareCenter(pawn.position)
+
+          return (
+            <span
+              key={pawn.id}
+              className="pointer-events-none absolute z-20 grid size-[5%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white text-[0.45rem] font-bold text-white shadow-md transition-[left,top] duration-150 ease-in-out sm:text-xs"
+              style={{
+                left: `${center.x + pawn.offset.x}%`,
+                top: `${center.y + pawn.offset.y}%`,
+                backgroundColor: pawn.color,
+              }}
+              aria-label={`${pawn.name} berada di kotak ${pawn.position}`}
+              role="img"
+            >
+              {pawn.marker}
+            </span>
+          )
+        })}
       </div>
     </div>
   )
