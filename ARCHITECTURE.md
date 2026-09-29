@@ -14,6 +14,8 @@ The application is a React single-page game. `src/main.jsx` mounts `App`, which 
 | `src/components/controls/` | Provides dice and game actions, and displays turn status. |
 | `src/data/` | Holds board connections, bot personas, and event-to-dialogue variations. |
 | `src/engine/` | Implements dice, movement, turn-order, and snake/ladder rules as reusable functions. |
+| `src/settings/` | Global settings state: defaults and sanitizing (`settingsDefaults.js`), `SettingsProvider`, and the `useSettings` hook. Stores values only; no audio engine yet. |
+| `src/components/settings/` | Reusable settings controls: `SettingsSection`, `VolumeSlider`, `ToggleSwitch`. |
 | `src/hooks/` | Owns gameplay state, the queued automatic chat behavior, and screen navigation (`useNavigation`). |
 | `src/styles/` | Defines shared theme tokens used by Tailwind and the application. |
 
@@ -23,6 +25,10 @@ The application is a React single-page game. `src/main.jsx` mounts `App`, which 
 
 The current event names are `DICE_SIX`, `CLUTCH_ZONE`, `LADDER_CLIMB`, `SNAKE_BITE`, and `GAME_OVER`. The application passes the chat hook's event handler into `useGame`.
 
+## Settings state
+
+`SettingsProvider` wraps `App` in `main.jsx` and holds user settings (`audio.master`, `audio.bgm`, `audio.sfx`, `audio.muted`, and an empty `visual` slot). Any screen reads or updates them through `useSettings`. Input is always passed through `sanitizeSettings`, so invalid or corrupt stored data cannot crash the app, and changes persist to `localStorage`. The provider does not play sound; a future audio module should call `getEffectiveVolume(audio, 'bgm' | 'sfx')` to get the final 0-1 volume (master and mute already applied) rather than putting audio logic in screens such as the lobby.
+
 ## Automatic chat flow
 
 `useAutoChat` looks up event reactions in `chatTriggers.js`, resolves each reaction's author in `botPersonas.js`, substitutes the player's name, and appends the result to a queue. It displays the selected bot's typing state for 1-1.5 seconds before adding the message. The queue serializes reactions so only one bot types at a time. Human messages are appended immediately. `ChatPanel` renders the shared message state and scrolls its message viewport to the latest item.
@@ -30,6 +36,8 @@ The current event names are `DICE_SIX`, `CLUTCH_ZONE`, `LADDER_CLIMB`, `SNAKE_BI
 ```mermaid
 flowchart LR
     A[App + useNavigation] --> L[LobbyScreen]
+    A -->|Settings| ST[SettingsScreen]
+    ST --> SP[useSettings / SettingsProvider]
     A -->|Start Game| GS[GameScreen]
     GS --> B[useGame]
     GS --> C[useAutoChat]
