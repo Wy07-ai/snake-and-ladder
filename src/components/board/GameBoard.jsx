@@ -16,6 +16,7 @@ function GameBoard({
   players = [DEFAULT_PLAYER],
   slidingPlayerId = null,
   theme = 'classic',
+  layout = 'desktop',
 }) {
   const pawns = players.map((player, index) => ({
     ...player,
@@ -24,7 +25,7 @@ function GameBoard({
   }))
 
   return (
-    <BoardView theme={theme} fit>
+    <BoardView theme={theme} fit={layout === 'mobile' ? 'width' : 'fill'}>
       {pawns.map((pawn) => {
         const center = getSquareCenter(pawn.position)
         // Pawn yang meluncur di tangga/ular bergerak lebih lambat agar terlihat.

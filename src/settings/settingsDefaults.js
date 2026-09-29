@@ -3,6 +3,7 @@
 // tidak valid selalu dikembalikan ke default oleh sanitizeSettings.
 
 import { BOARD_THEMES, DEFAULT_BOARD_THEME } from '../data/boardThemes.js'
+import { DEFAULT_LAYOUT_MODE, LAYOUT_MODES, MOBILE_MAX_WIDTH_QUERY } from '../data/layoutModes.js'
 import { DEFAULT_PAWN, HUMAN_AVATARS, PAWN_COLORS, PAWN_SHAPES } from '../data/pawnOptions.js'
 import { DEFAULT_NAMES, NAME_IDS, NAME_MAX_LENGTH } from '../data/playerNames.js'
 
@@ -20,6 +21,11 @@ export const DEFAULT_SETTINGS = {
   visual: {
     theme: DEFAULT_BOARD_THEME,
     pawn: { ...DEFAULT_PAWN },
+  },
+  // Mode tampilan layar permainan ('desktop' | 'mobile'). Disimpan bersama pengaturan
+  // lain di localStorage, sehingga layout otomatis mengikuti pilihan pemain.
+  layout: {
+    mode: DEFAULT_LAYOUT_MODE,
   },
   // Nama pilihan pemain. String kosong = "pakai nama bawaan" (lihat resolveNames),
   // jadi kolom input boleh dikosongkan tanpa menyimpan nilai palsu.
@@ -70,10 +76,22 @@ function sanitizeNames(raw) {
   return Object.fromEntries(NAME_IDS.map((id) => [id, cleanNameInput(source[id])]))
 }
 
+// Tebakan awal untuk pemain yang belum pernah memilih: layar sempit -> mode HP.
+// Setelah dipilih di Settings, pilihan pemain selalu menang atas tebakan ini.
+export function detectLayoutMode() {
+  try {
+    return window.matchMedia(MOBILE_MAX_WIDTH_QUERY).matches ? 'mobile' : DEFAULT_LAYOUT_MODE
+  } catch {
+    return DEFAULT_LAYOUT_MODE
+  }
+}
+
 // Menerima data apa pun (mis. dari localStorage yang rusak/lama) dan
 // selalu mengembalikan objek settings yang valid. Tidak pernah melempar error.
-export function sanitizeSettings(raw) {
+// `fallbackLayoutMode` dipakai bila mode layout belum ada / tidak valid.
+export function sanitizeSettings(raw, fallbackLayoutMode = DEFAULT_LAYOUT_MODE) {
   const source = raw && typeof raw === 'object' ? raw : {}
+  const layout = source.layout && typeof source.layout === 'object' ? source.layout : {}
   const audio = source.audio && typeof source.audio === 'object' ? source.audio : {}
   const visual = source.visual && typeof source.visual === 'object' ? source.visual : {}
 
@@ -88,6 +106,9 @@ export function sanitizeSettings(raw) {
       theme: pickId(visual.theme, BOARD_THEMES, DEFAULT_SETTINGS.visual.theme),
       pawn: sanitizePawn(visual.pawn),
     },
+    layout: {
+      mode: pickId(layout.mode, LAYOUT_MODES, fallbackLayoutMode),
+    },
     names: sanitizeNames(source.names),
   }
 }
@@ -95,10 +116,10 @@ export function sanitizeSettings(raw) {
 export function loadSettings() {
   try {
     const stored = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
-    return sanitizeSettings(stored ? JSON.parse(stored) : null)
+    return sanitizeSettings(stored ? JSON.parse(stored) : null, detectLayoutMode())
   } catch {
     // Storage diblokir / JSON rusak: pakai default, jangan crash.
-    return sanitizeSettings(null)
+    return sanitizeSettings(null, detectLayoutMode())
   }
 }
 

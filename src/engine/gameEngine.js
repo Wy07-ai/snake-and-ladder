@@ -4,12 +4,22 @@ import { DEFAULT_NAMES } from '../data/playerNames.js'
 
 // Jeda animasi (ms). Dipakai useGame; lama SFX kocokan dadu dan luncuran
 // tangga/ular di src/audio dibuat mengikuti angka ini.
+//
+// Timeline dadu (persentase dari DICE_ROLL_MS). Satu sumber kebenaran untuk tiga
+// hal yang harus sinkron: keyframes `dice-*` di styles/board.css, jadwal SFX
+// diceRoll di audio/audioEngine.js, dan saat angka hasil diperlihatkan.
 export const DICE_ROLL_MS = 900
 // Puncak guncangan: dadu mencapai titik tertinggi lemparan pada 35% durasi.
-// Keyframes `dice-*` di styles/board.css memakai persentase yang sama (35%),
-// dan SFX diceRoll menaruh aksen "lempar" tepat di titik ini.
 export const DICE_PEAK_RATIO = 0.35
 export const DICE_PEAK_MS = Math.round(DICE_ROLL_MS * DICE_PEAK_RATIO)
+// Dadu pertama kali menyentuh meja pada 68%; di titik ini angka hasil mulai terbaca.
+export const DICE_LAND_RATIO = 0.68
+export const DICE_LAND_MS = Math.round(DICE_ROLL_MS * DICE_LAND_RATIO)
+// Pantulan berikutnya (90% dan 98,5%).
+export const DICE_BOUNCE_RATIOS = [0.9, 0.985]
+// Benturan dadu ke dinding "tangan" selama guncangan, sebagai pecahan dari
+// DICE_PEAK_MS. Keyframes `dice-shake` memakai persentase yang sama.
+export const DICE_SHAKE_HITS = [0.08, 0.22, 0.36, 0.5, 0.64, 0.78, 0.92]
 export const SPECIAL_MOVE_MS = 800
 
 // Bot punya karakter, bentuk, dan warna tetap.
@@ -72,4 +82,13 @@ export function resolveSpecialSquare(position) {
   if (snake) return { position: snake.end, type: 'snake' }
 
   return { position, type: null }
+}
+
+// Lawan yang disalip sebuah gerakan: yang tadinya ada di depan `from` dan kini berada
+// di belakang `to`. Diurutkan dari yang paling depan (paling "berharga" disalip).
+export function findPassedPlayers(players, positions, moverId, from, to) {
+  return players
+    .filter((other) => other.id !== moverId)
+    .filter((other) => from < positions[other.id] && to > positions[other.id])
+    .sort((a, b) => positions[b.id] - positions[a.id])
 }

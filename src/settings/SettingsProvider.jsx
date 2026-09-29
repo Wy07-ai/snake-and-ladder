@@ -3,6 +3,7 @@ import { SettingsContext } from './SettingsContext.js'
 import {
   AUDIO_CHANNELS,
   DEFAULT_SETTINGS,
+  detectLayoutMode,
   loadSettings,
   resolveNames,
   sanitizeSettings,
@@ -51,6 +52,11 @@ function SettingsProvider({ children }) {
     )
   }, [])
 
+  // Mode tampilan ('desktop' | 'mobile'); nilai lain diabaikan oleh sanitizeSettings.
+  const setLayoutMode = useCallback((mode) => {
+    setSettings((current) => sanitizeSettings({ ...current, layout: { ...current.layout, mode } }, current.layout.mode))
+  }, [])
+
   // Mengubah satu nama ('human' | 'rizky' | 'bagas' | 'davin'). Nilai kosong
   // berarti memakai nama bawaan; pembersihan teks dilakukan sanitizeSettings.
   const setName = useCallback((id, value) => {
@@ -58,14 +64,18 @@ function SettingsProvider({ children }) {
     setSettings((current) => sanitizeSettings({ ...current, names: { ...current.names, [id]: value } }))
   }, [])
 
-  const resetSettings = useCallback(() => setSettings(sanitizeSettings(DEFAULT_SETTINGS)), [])
+  // Reset mengembalikan semuanya ke default; mode layout kembali mengikuti ukuran layar.
+  const resetSettings = useCallback(
+    () => setSettings(sanitizeSettings({ ...DEFAULT_SETTINGS, layout: { mode: detectLayoutMode() } })),
+    [],
+  )
 
   // Nama final (kosong sudah diganti nama bawaan) yang siap dipakai permainan.
   const playerNames = useMemo(() => resolveNames(settings.names), [settings.names])
 
   const value = useMemo(
-    () => ({ settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setName, resetSettings }),
-    [settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setName, resetSettings],
+    () => ({ settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setLayoutMode, setName, resetSettings }),
+    [settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setLayoutMode, setName, resetSettings],
   )
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

@@ -7,12 +7,19 @@ import SettingsScreen from './screens/SettingsScreen.jsx'
 import SetupScreen from './screens/SetupScreen.jsx'
 import { useAudioSync } from './audio/useAudioSync.js'
 import { SCREENS, useNavigation } from './hooks/useNavigation.js'
+import { useSettings } from './settings/useSettings.js'
 
-// App memilih layar aktif dan menyalakan audio global (musik latar mengikuti
-// Settings di semua layar). Logic permainan ada di GameScreen/useGame.
+// App memilih layar aktif, menyalakan audio global (musik latar mengikuti
+// Settings di semua layar), dan menandai mode tampilan di <html>. Logic permainan ada di GameScreen/useGame.
 function App() {
   const { screen, navigate, goToLobby } = useNavigation()
   useAudioSync()
+  const layoutMode = useSettings().settings.layout.mode
+
+  // Mode tampilan dipasang di <html> agar CSS global (styles/layout.css) ikut menyesuaikan.
+  useEffect(() => {
+    document.documentElement.dataset.layout = layoutMode
+  }, [layoutMode])
 
   // Layar baru selalu dimulai dari atas (posisi scroll layar sebelumnya tidak terbawa).
   useEffect(() => {

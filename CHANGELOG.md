@@ -5,6 +5,12 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- Dialog bot bergaya RPG (`RpgDialog`, `TypewriterText`, `styles/dialog.css`): kotak dialog gelap bersudut bertakik dengan potret bot yang sedang bicara (bidak karakternya) plus ekspresi emoji persona, papan nama berwarna persona, huruf monospasi, teks yang diketik huruf demi huruf, dan kursor ▼ berkedip saat selesai. Bot yang bicara diberi animasi mengangguk kecil selama mengetik. Blip pendek (`dialog`) berbunyi tiap baris baru. Pembaca layar membaca teks lengkap lewat wilayah `role="status"`; pengguna *reduced motion* langsung melihat teks penuh tanpa animasi.
+- Kejadian dialog baru: `OVERTAKE` (pemain menyalip lawan; teks memakai `{target}`) dan `GAME_START` (sapaan pembuka). Aturan menyalip ada di `findPassedPlayers` (`gameEngine.js`). `EVENT_CHANCE` membuat `DICE_SIX` dan `OVERTAKE` tidak selalu memicu dialog agar bot tidak cerewet.
+- Toggle mode tampilan di Settings > "Tampilan layar" (`LayoutModePicker`): **Mode Desktop** (papan di kiri, sidebar di kanan, satu layar tanpa scroll) atau **Mode HP / Mobile** (satu kolom ringkas: papan, dialog bot, pemain, lalu dadu di dasar agar terjangkau jempol). Pilihan disimpan di `settings.layout.mode` (`localStorage`) dan dipakai otomatis saat berikutnya; pemain baru diberi tebakan awal dari lebar layar (di bawah 48rem = HP). `setLayoutMode` tersedia di `useSettings`, dan App menaruh `data-layout` di `<html>` (mode HP membatasi seluruh aplikasi ke satu kolom selebar ponsel, `styles/layout.css`).
+- Dadu: riak benturan (`.dice-ring`) dan kilau hasil (`.dice-glow`, emas untuk angka 6) saat mendarat; tunduk sebelum dilempar; squash & stretch di tiap pantulan; dadu mengambang pelan sebagai ajakan melempar saat tombolnya aktif; dadu menyusut saat ditekan. Petunjuk "Ketuk dadu untuk melempar." muncul di giliran pemain.
+- `PlayerList` punya mode `compact` (bidak, nama, dan kotak menumpuk vertikal) untuk layout HP.
+- Timeline dadu bersama di `gameEngine.js`: `DICE_LAND_RATIO`/`DICE_LAND_MS`, `DICE_BOUNCE_RATIOS`, dan `DICE_SHAKE_HITS`, dipakai oleh keyframes, SFX, dan pergantian angka.
 - Nama kustom: nama pemain utama dan ketiga bot (Rizky, Bagas, Davin) bisa diubah di layar "Siapkan Permainan" maupun Settings lewat `NameCustomizer` (dengan bidak di samping tiap kolom). Kolom yang dikosongkan memakai nama bawaan ("Kamu", "Rizky", "Bagas", "Davin"), maksimal 16 karakter, dan ada peringatan lunak bila ada nama kembar. Nama dipakai di daftar pemain, status giliran, header dan pesan chat, indikator "is typing...", serta reaksi bot yang menyebut nama pemain.
 - `settings.names` (disimpan ke `localStorage`) beserta `setName` dan `playerNames` (nama final) di `useSettings`; data slot nama ada di `src/data/playerNames.js`.
 - Dadu 3D: kubus CSS dengan enam sisi bertitik yang dikocok, dilempar ke udara (skala membesar, bayangan mengecil), berputar, lalu memantul dua kali sebelum berhenti. Angka pada sisi berganti acak dan melambat sesaat sebelum berhenti di hasil sebenarnya. Efek gerak dimatikan bila pengguna memilih *reduced motion*.
@@ -25,6 +31,13 @@ All notable changes to this project are documented here. The format follows [Kee
 - Player list under the board showing each pawn, name, square, and whose turn it is.
 
 ### Changed
+- Chat ala WhatsApp diganti dialog RPG: pemain utama tidak lagi mengirim pesan, dan obrolan hanya datang dari Rizky, Bagas, dan Davin berdasarkan kejadian permainan (naik tangga, terperosok ular, menyalip, mendekati garis akhir, angka 6, kemenangan). Hanya satu baris tampil sekaligus; baris berikutnya mengantre (maksimal 2, yang tertua dibuang) dan `GAME_OVER` langsung memotong dialog yang sedang tampil. Bot tidak lagi mengomentari dirinya sendiri atau lawan yang terlibat.
+- `useAutoChat({ onLine, names })` kini mengembalikan `{ line, triggerEvent }` (sebelumnya `messages`, `sendMessage`, `typingPersona`) dan `onIncomingMessage` menjadi `onLine`. `onGameEvent` menerima argumen ketiga `extra` (mis. `{ target }`).
+- Layar permainan mengikuti mode tampilan pilihan pemain, bukan lagi ditebak dari ukuran viewport lewat varian `fit:`. Mode Desktop tetap satu layar penuh dan pada layar sempit halaman bergeser ke samping (seperti "situs desktop"); mode HP menggulir vertikal bila layar sangat pendek. `BoardView` menerima `fit="fill" | "width"` (sebelumnya boolean) dan `GameBoard` menerima `layout`.
+- Animasi dadu dipoles: gerak hanya memakai `transform`/`opacity` dengan lapisan GPU selama mengocok (`translate3d`, `will-change`), kurva easing per segmen, rattle dengan amplitudo naik, dan keyframes disusun ulang di sekitar timeline yang sama (puncak 35%, mendarat 68%, pantulan 90% dan 98,5%). Angka hasil kini terbaca begitu dadu menyentuh meja (68%) selagi memantul, bukan baru setelah animasi selesai.
+- SFX `diceRoll` menaruh klik rattle tepat di balikan arah guncangan (`DICE_SHAKE_HITS`) dan benturan di `DICE_LAND_RATIO`/`DICE_BOUNCE_RATIOS`, semuanya dari konstanta yang sama dengan keyframes.
+- `useGame` mengembalikan `rollingValue` (angka yang sedang dilempar) dan melaporkan `OVERTAKE`.
+- Deskripsi audio di Settings menyebut "dialog bot" menggantikan "notifikasi chat".
 - Layar permainan kini muat dalam satu layar (jendela biasa maupun F11) tanpa scrollbar: `BoardView` punya mode `fit` yang menghitung sisi papan dari lebar dan tinggi yang tersedia (container query, `min(100cqw, 100cqh)`) sehingga papan 10x10 selalu persegi. Pada layar lebar, papan berada di kolom kiri, sedangkan daftar pemain, kontrol, dan chat menumpuk di sidebar kanan; pada layar sempit atau pendek, susunan kembali vertikal dan halaman boleh di-scroll.
 - Angka, lencana, dan bendera pada kotak papan ikut membesar/mengecil mengikuti lebar papan (`cqw`).
 - SFX `diceRoll` disusun ulang mengikuti timeline animasi: klik kocokan yang makin rapat, aksen "lempar" tepat di puncak guncangan (`DICE_PEAK_MS`), lalu dua bunyi pantulan saat dadu menyentuh meja. Jadwalnya dihitung dari satu waktu mulai sehingga tetap sinkron dengan layar.
@@ -38,7 +51,11 @@ All notable changes to this project are documented here. The format follows [Kee
 - Board rendering split into `BoardView`, `Connections`, and `engine/boardGeometry.js`; board colors are CSS variables in `styles/board.css`.
 - Audio pauses while the browser tab is hidden and starts only after the first click or tap, as browsers require.
 
+### Removed
+- `ChatPanel`, `ChatMessage`, dan `ChatInput` (UI chat gaya WhatsApp beserta kolom "Tulis pesan"), `sendMessage`, indikator "is typing...", dan varian Tailwind `fit:`.
+
 ### Fixed
+- Sinkronisasi dadu: bunyi kocokan kini dimulai setelah frame pertama animasi tampil (sebelumnya ~50 ms lebih awal dari gerakan), dan pergantian angka menunggu animasi benar-benar selesai. Sebelumnya class animasi dilepas ~40 ms sebelum animasi berakhir sehingga dadu terpotong dan melompat ke pose akhir.
 - Posisi scroll layar sebelumnya tidak lagi terbawa ke layar berikutnya; setiap pergantian layar kembali ke atas (sebelumnya layar permainan bisa terbuka dalam keadaan ter-scroll setelah menekan "Mulai Bermain" di bagian bawah layar persiapan).
 
 ## [0.4.0] - 2026-09-29 - Phase 4

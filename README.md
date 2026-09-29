@@ -1,6 +1,6 @@
 # 🐍 Ular Tangga
 
-Game **Ular Tangga** berbasis React yang menghadirkan permainan papan klasik dengan bot lawan dan chat interaktif. Pemain dapat bermain melawan tiga karakter bot dengan gaya komunikasi yang berbeda, sementara setiap kejadian penting di dalam permainan dapat memicu komentar otomatis.
+Game **Ular Tangga** berbasis React yang menghadirkan permainan papan klasik dengan bot lawan dan dialog bergaya RPG. Pemain dapat bermain melawan tiga karakter bot dengan gaya bicara yang berbeda, sementara setiap kejadian penting di dalam permainan (naik tangga, terperosok ular, menyalip lawan, mendekati garis akhir) memicu komentar otomatis dari bot.
 
 ## ✨ Fitur
 
@@ -10,17 +10,18 @@ Game **Ular Tangga** berbasis React yang menghadirkan permainan papan klasik den
   - **Rizky** — toksik dan emosian
   - **Bagas** — meme dan santuy
   - **Davin** — kalkulatif dan dingin
-- 💬 **Chat interaktif** yang merespons kejadian dalam permainan
+- 💬 **Dialog bot bergaya RPG**: kotak dialog minimalis dengan potret bot yang sedang bicara dan teks yang diketik huruf demi huruf. Kamu tidak perlu mengetik apa pun; ketiga bot bicara sendiri sesuai kejadian permainan
 - 🎯 Animasi perpindahan pion per kotak dan pion yang meluncur di tangga/ular
-- 🎲 **Dadu 3D**: dikocok, dilempar, berputar, dan memantul dengan angka acak yang melambat sebelum berhenti; bunyinya disusun mengikuti animasi
+- 🎲 **Dadu 3D**: dikocok, dilempar, berputar, dan memantul dengan squash & stretch, riak benturan, serta angka acak yang melambat dan terbaca begitu dadu mendarat; bunyinya disinkronkan dengan frame animasi
 - 🖥️ **Muat satu layar**: papan tetap persegi dan seluruh panel muat tanpa scroll, baik di jendela biasa maupun fullscreen (F11)
+- 📐 **Mode tampilan**: pilih **Mode Desktop** (papan dan sidebar berdampingan) atau **Mode HP / Mobile** (satu kolom ringkas) di Settings; pilihanmu tersimpan di perangkat
 - 🏷️ **Nama kustom**: ubah nama kamu dan ketiga bot (Rizky, Bagas, Davin) di layar persiapan atau Settings; kolom kosong memakai nama bawaan, dan pilihanmu tersimpan
 - 🧸 **Bidak kustom**: pilih karakter 2D (kucing, kelinci, alien, hantu, astronot, katak), warna, dan bentuk sebelum bermain
 - 🎨 **3 tema papan**: Classic, Cyberpunk, dan Jungle
-- 🔊 **Suara & musik**: kocokan dadu, langkah pion, naik tangga, terperosok ular, notifikasi chat "Ting!", dan musik latar santai (disintesis lewat kode, tanpa file audio)
+- 🔊 **Suara & musik**: kocokan dadu, langkah pion, naik tangga, terperosok ular, blip dialog bot, dan musik latar santai (disintesis lewat kode, tanpa file audio)
 - 🏆 Kondisi kemenangan saat pemain mencapai kotak **100**
 - 🔄 Tombol **Mulai ulang** untuk mengatur permainan dari awal
-- 📱 Tampilan responsif untuk berbagai ukuran layar
+- 📱 Tampilan yang bisa dipilih untuk layar lebar maupun HP
 
 ## 🛠️ Teknologi
 
@@ -37,9 +38,10 @@ src/
 ├── assets/          # Asset gambar dan icon
 ├── components/
 │   ├── board/       # Papan bertema, ular/tangga, dan bidak di papan
-│   ├── chat/        # Panel dan pesan chat
+│   ├── chat/        # Dialog bot bergaya RPG dan teks yang diketik
 │   ├── controls/    # Dadu, kontrol game, dan daftar pemain
 │   ├── customize/   # Pemilih nama, bidak, dan tema papan
+│   ├── settings/    # Komponen Settings (slider, toggle, pemilih mode tampilan)
 │   └── pawn/        # Bidak dan gambar karakter SVG
 ├── audio/
 │   ├── audioEngine.js   # SFX dan musik latar (Web Audio)
@@ -50,16 +52,20 @@ src/
 │   ├── pawnOptions.js   # Karakter, warna, dan bentuk bidak
 │   ├── botPersonas.js   # Persona bot
 │   ├── playerNames.js   # Slot dan nama bawaan pemain & bot
-│   └── chatTriggers.js  # Respons chat berdasarkan event
+│   ├── layoutModes.js   # Daftar mode tampilan (Desktop / HP)
+│   ├── dialogTiming.js  # Kecepatan ketik dan lama tampil dialog
+│   └── chatTriggers.js  # Dialog bot berdasarkan event
 ├── engine/
 │   ├── gameEngine.js    # Aturan dan logika dasar permainan
 │   └── boardGeometry.js # Posisi kotak, bentuk ular & tangga
 ├── hooks/
 │   ├── useGame.js       # State dan alur permainan
-│   └── useAutoChat.js   # Sistem chat otomatis
+│   └── useAutoChat.js   # Antrean dialog bot otomatis
 ├── styles/
 │   ├── theme.css
-│   └── board.css        # Papan, tema papan, dan dadu 3D
+│   ├── board.css        # Papan, tema papan, dan dadu 3D
+│   ├── dialog.css       # Kotak dialog RPG
+│   └── layout.css       # Aturan global mode tampilan
 ├── App.jsx
 ├── index.css
 └── main.jsx
@@ -128,7 +134,7 @@ Nama bawaan pemain dan bot (yang dipakai bila kolom nama dikosongkan) dapat diub
 src/data/playerNames.js
 ```
 
-Persona serta dialog bot dapat disesuaikan melalui:
+Persona serta dialog bot (termasuk peluang tiap kejadian memicu dialog) dapat disesuaikan melalui:
 
 ```text
 src/data/botPersonas.js

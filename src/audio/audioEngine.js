@@ -1,7 +1,7 @@
 // Audio engine berbasis Web Audio API. Semua suara disintesis lewat kode,
 // jadi tidak ada file audio yang harus dimuat atau dilisensikan.
 //
-// - SFX: playSfx('diceRoll' | 'step' | 'ladder' | 'snake' | 'notification' | 'win')
+// - SFX: playSfx('diceRoll' | 'step' | 'ladder' | 'snake' | 'dialog' | 'notification' | 'win')
 // - BGM: startBgm() / stopBgm(), musik santai yang berulang otomatis
 // - Volume: setVolumes({ bgm, sfx }) menerima nilai 0-1 dari getEffectiveVolume()
 //
@@ -9,7 +9,13 @@
 // audio baru dibuat/dilanjutkan lewat unlockAudio() (dipanggil useAudioSync
 // pada sentuhan/klik pertama). Sebelum itu semua fungsi aman dipanggil tapi diam.
 
-import { DICE_PEAK_MS, DICE_ROLL_MS } from '../engine/gameEngine.js'
+import {
+  DICE_BOUNCE_RATIOS,
+  DICE_LAND_RATIO,
+  DICE_PEAK_MS,
+  DICE_ROLL_MS,
+  DICE_SHAKE_HITS,
+} from '../engine/gameEngine.js'
 
 const AudioContextClass =
   typeof window !== 'undefined' ? window.AudioContext ?? window.webkitAudioContext : undefined
@@ -139,12 +145,15 @@ function noise(dest, { start, duration, gain = 0.2, filter = 'bandpass', frequen
 const STEP_SCALE = [0, 2, 4, 7, 9, 12] // pentatonik mayor: langkah beruntun terdengar naik
 
 const SFX = {
-  // Kocokan dadu, disusun mengikuti animasi DiceButton (semua jadwal dihitung dari
-  // satu waktu mulai sehingga tetap sinkron dengan layar):
-  //   0 -> puncak   klik kocokan yang makin rapat dan makin keras (dadu digoyang)
-  //   puncak        aksen "lempar": desis + dentum rendah tepat di titik tertinggi
-  //   puncak -> 68% dadu berputar di udara (ketukan tipis)
-  //   68% / 90% / 98.5%   dadu menyentuh meja: dua pantulan lalu berhenti
+  // Kocokan dadu, disusun mengikuti animasi DiceButton. Semua jadwal dihitung dari
+  // satu waktu mulai dan memakai konstanta yang sama dengan keyframes (gameEngine.js):
+  //   DICE_SHAKE_HITS   dadu membentur dinding tangan: satu klik tiap balikan arah
+  //                     guncangan, makin keras (amplitudo guncangan juga naik)
+  //   puncak            aksen "lempar": desis + dentum rendah tepat di titik tertinggi
+  //   puncak -> landing dadu berputar di udara (ketukan tipis)
+  //   landing / bounce  dadu menyentuh meja: benturan terkeras, lalu dua pantulan kecil
+  // useGame memanggil ini setelah frame pertama animasi tampil, jadi bunyi dan gerak
+  // dimulai bersamaan.
   diceRoll(t, dest, { peakMs = DICE_PEAK_MS, totalMs = DICE_ROLL_MS } = {}) {
     const peak = peakMs / 1000
     const total = totalMs / 1000
@@ -158,21 +167,19 @@ const SFX = {
       tone(dest, { freq: rand(400, 460), freqEnd: 170, type: 'triangle', start: t + offset, duration: 0.09, gain: gain * 0.8 })
     }
 
-    const rattles = 9
-    for (let index = 0; index < rattles; index += 1) {
-      const progress = index / (rattles - 1)
-      click(peak * 0.94 * progress ** 0.6, 0.1 + 0.18 * progress)
-    }
+    DICE_SHAKE_HITS.forEach((share, index) => {
+      const progress = index / (DICE_SHAKE_HITS.length - 1)
+      click(peak * share, 0.1 + 0.18 * progress)
+    })
 
     noise(dest, { start: t + peak, duration: 0.16, gain: 0.26, frequency: 600, frequencyEnd: 2600, q: 0.8 })
     tone(dest, { freq: 190, freqEnd: 70, type: 'triangle', start: t + peak, duration: 0.14, gain: 0.26 })
 
-    const landing = total * 0.68
+    const landing = total * DICE_LAND_RATIO
     ;[0.3, 0.55, 0.8].forEach((share) => click(peak + (landing - peak) * share, 0.09))
 
     clack(landing, 0.34)
-    clack(total * 0.9, 0.2)
-    clack(total * 0.985, 0.1)
+    DICE_BOUNCE_RATIOS.forEach((ratio, index) => clack(total * ratio, index === 0 ? 0.2 : 0.1))
   },
 
   // Langkah pion: "tok" pendek, nadanya naik untuk tiap petak dalam satu lemparan.
@@ -227,6 +234,13 @@ const SFX = {
 
     noise(dest, { start: t + 0.03, duration: 0.55, gain: 0.09, filter: 'highpass', frequency: 3600, frequencyEnd: 1800 })
     tone(dest, { freq: 110, freqEnd: 50, type: 'sine', start: t + 0.68, duration: 0.25, gain: 0.28 })
+  },
+
+  // Blip dialog RPG: nada pendek persegi, tinggi nadanya sedikit berbeda tiap baris.
+  dialog(t, dest) {
+    const base = rand(392, 494)
+    tone(dest, { freq: base, type: 'square', start: t, duration: 0.05, gain: 0.07 })
+    tone(dest, { freq: base * 1.5, type: 'square', start: t + 0.055, duration: 0.07, gain: 0.06 })
   },
 
   // "Ting!" pesan masuk: dua denting kaca yang naik.

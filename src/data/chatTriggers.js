@@ -1,4 +1,12 @@
+// Dialog bot per kejadian permainan. Placeholder: {player} = pemain yang mengalami
+// kejadian, {target} = lawan yang disalip (hanya OVERTAKE). Bot tidak pernah
+// membicarakan dirinya sendiri: pilihan dialog diseleksi oleh useAutoChat.
 export const CHAT_TRIGGERS = {
+  GAME_START: [
+    { personaId: 'rizky', text: 'Cepat lempar dadunya. Jangan kelamaan mikir!' },
+    { personaId: 'bagas', text: 'Santuy dulu, bestie. Ular-ularnya masih tidur kok 🐍' },
+    { personaId: 'davin', text: 'Peluang menang masing-masing 25%. Kita lihat siapa yang beruntung.' },
+  ],
   LADDER_CLIMB: [
     { personaId: 'rizky', text: 'Wah, {player} naik tangga. Jangan sombong dulu!' },
     { personaId: 'bagas', text: '{player} nemu eskalator gratis 🤣' },
@@ -8,6 +16,11 @@ export const CHAT_TRIGGERS = {
     { personaId: 'rizky', text: 'Yah, {player} malah melorot. Apes banget.' },
     { personaId: 'bagas', text: 'Ular express mengantar {player} turun 🐍' },
     { personaId: 'davin', text: 'Posisi {player} turun. Keunggulan sebelumnya terhapus.' },
+  ],
+  OVERTAKE: [
+    { personaId: 'rizky', text: '{player} nyalip {target}?! Awas, jangan sampai kesalip balik!' },
+    { personaId: 'bagas', text: '{player} ngebut nyalip {target}, gaspol 🏎️' },
+    { personaId: 'davin', text: '{player} kini di depan {target}. Selisih posisi berubah.' },
   ],
   DICE_SIX: [
     { personaId: 'rizky', text: 'Dapat enam? Jangan-jangan habis ini apes lagi.' },
@@ -25,3 +38,13 @@ export const CHAT_TRIGGERS = {
     { personaId: 'davin', text: '{player} menang. Hasil yang konsisten.' },
   ],
 }
+
+// Peluang sebuah kejadian memicu dialog (default 1). Kejadian yang sering terjadi
+// dibuat lebih jarang agar bot tidak cerewet dan antrean dialog tidak menumpuk.
+export const EVENT_CHANCE = {
+  DICE_SIX: 0.6,
+  OVERTAKE: 0.8,
+}
+
+// Kejadian yang langsung memotong dialog yang sedang tampil.
+export const INTERRUPT_EVENTS = ['GAME_OVER']

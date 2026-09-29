@@ -17,8 +17,3 @@
   --color-wa-ink: var(--wa-ink);
   --color-wa-muted: var(--wa-muted);
 }
-
-/* Varian `fit:` = layar cukup lebar DAN cukup tinggi untuk menampilkan papan dan
-   panel dalam satu layar tanpa scroll (jendela biasa maupun F11). Di bawah itu
-   halaman kembali menumpuk vertikal dan boleh di-scroll. */
-@custom-variant fit (@media (min-width: 64rem) and (min-height: 38rem));

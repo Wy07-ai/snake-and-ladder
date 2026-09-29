@@ -16,13 +16,12 @@ for (const snake of snakes) {
 // Papan tanpa bidak: kotak + ular/tangga dengan tema tertentu. `children`
 // (mis. bidak) dirender di atas papan. `compact` dipakai untuk pratinjau tema.
 //
-// `fit` membuat papan selalu persegi (10x10 simetris) dan seluas mungkin di dalam
-// induknya, dihitung dari lebar DAN tinggi yang tersedia lewat container query:
-//  - varian `fit:` (layar lebar & tinggi): papan mengisi induk, yang harus
-//    `relative` dan punya tinggi dari layout (mis. baris grid `minmax(0,1fr)`).
-//    Sisi papan = min(lebar induk, tinggi induk), jadi tidak pernah menimbulkan scroll.
-//  - layar lain: lebar penuh induk, tetapi tidak lebih tinggi dari layar
-//    (dikurangi ~8rem untuk header) agar papan tidak lebih besar dari viewport.
+// `fit` membuat papan selalu persegi (10x10 simetris), dihitung lewat container query:
+//  - 'fill' (layout Desktop): papan mengisi induk, yang harus `relative` dan punya
+//    tinggi dari layout (mis. baris grid `minmax(0,1fr)`). Sisi papan = min(lebar induk,
+//    tinggi induk), jadi tidak pernah menimbulkan scroll.
+//  - 'width' (layout HP): selebar induk, tetapi tidak lebih tinggi dari sisa layar
+//    setelah dikurangi header, dialog, daftar pemain, dan kontrol (~22rem; minimal 18rem).
 function BoardView({ theme = 'classic', compact = false, fit = false, children }) {
   const board = (
     <div className={`board${compact ? ' board--compact' : ''}`} data-board-theme={theme} aria-hidden={compact || undefined}>
@@ -40,9 +39,17 @@ function BoardView({ theme = 'classic', compact = false, fit = false, children }
 
   if (!fit) return board
 
+  if (fit === 'fill') {
+    return (
+      <div className="absolute inset-0 grid w-full items-center justify-items-center [container-type:size]">
+        <div className="w-[min(100cqw,100cqh)]">{board}</div>
+      </div>
+    )
+  }
+
   return (
-    <div className="grid w-full justify-items-center [container-type:inline-size] fit:absolute fit:inset-0 fit:items-center fit:[container-type:size]">
-      <div className="w-[min(100cqw,calc(100dvh-8rem))] fit:w-[min(100cqw,100cqh)]">{board}</div>
+    <div className="grid w-full justify-items-center [container-type:inline-size]">
+      <div className="w-[min(100cqw,max(18rem,calc(100dvh-22rem)))]">{board}</div>
     </div>
   )
 }

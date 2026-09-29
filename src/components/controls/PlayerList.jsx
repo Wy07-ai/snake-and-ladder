@@ -1,8 +1,9 @@
 import Pawn from '../pawn/Pawn.jsx'
 
 // Daftar pemain: bidak, nama, posisi, dan penanda giliran aktif.
-// `className` mengatur jumlah kolom (bawaan 2, lalu 4 di layar sm ke atas).
-function PlayerList({ className = 'grid-cols-2 sm:grid-cols-4', players, positions, currentPlayerId, isGameOver = false }) {
+// `className` mengatur jumlah kolom (bawaan 2, lalu 4 di layar sm ke atas). `compact`
+// (layout HP) menumpuk bidak, nama, dan kotak secara vertikal agar empat pemain muat sebaris.
+function PlayerList({ className = 'grid-cols-2 sm:grid-cols-4', compact = false, players, positions, currentPlayerId, isGameOver = false }) {
   return (
     <ul className={`grid gap-2 ${className}`} aria-label="Daftar pemain">
       {players.map((player) => {
@@ -11,15 +12,15 @@ function PlayerList({ className = 'grid-cols-2 sm:grid-cols-4', players, positio
         return (
           <li
             key={player.id}
-            className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 transition ${
-              isActive ? 'border-wa-primary bg-wa-soft' : 'border-wa-primary/10 bg-wa-paper'
-            }`}
+            className={`flex rounded-lg border transition ${
+              compact ? 'flex-col items-center gap-0.5 px-1 py-1.5 text-center' : 'items-center gap-2 px-2 py-1.5'
+            } ${isActive ? 'border-wa-primary bg-wa-soft' : 'border-wa-primary/10 bg-wa-paper'}`}
             aria-current={isActive ? 'true' : undefined}
           >
-            <Pawn avatar={player.avatar} shape={player.shape} color={player.color} className="size-8 shrink-0" />
-            <span className="grid min-w-0 leading-tight">
-              <span className="truncate text-sm font-bold text-wa-ink">{player.name}</span>
-              <span className="text-xs text-wa-muted">Kotak {positions[player.id]}</span>
+            <Pawn avatar={player.avatar} shape={player.shape} color={player.color} className={compact ? 'size-7 shrink-0' : 'size-8 shrink-0'} />
+            <span className="grid w-full min-w-0 leading-tight">
+              <span className={`truncate font-bold text-wa-ink ${compact ? 'text-[11px]' : 'text-sm'}`}>{player.name}</span>
+              <span className={compact ? 'text-[10px] text-wa-muted' : 'text-xs text-wa-muted'}>Kotak {positions[player.id]}</span>
             </span>
           </li>
         )

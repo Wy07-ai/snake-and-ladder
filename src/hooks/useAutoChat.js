@@ -1,109 +1,98 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BOT_PERSONAS } from '../data/botPersonas.js'
-import { CHAT_TRIGGERS } from '../data/chatTriggers.js'
+import { CHAT_TRIGGERS, EVENT_CHANCE, INTERRUPT_EVENTS } from '../data/chatTriggers.js'
+import { FIRST_LINE_DELAY_MS, MAX_QUEUED_LINES, getLineDuration } from '../data/dialogTiming.js'
 import { DEFAULT_NAMES } from '../data/playerNames.js'
 
-function createMessage({ author, avatar = null, color = null, text, type }) {
-  return {
-    id: `${Date.now()}-${Math.random()}`,
-    author,
-    avatar,
-    color,
-    text,
-    timestamp: Date.now(),
-    type,
-  }
-}
+let lineCounter = 0
 
-// `onIncomingMessage` dipanggil tiap pesan bot muncul (dipakai untuk bunyi "Ting!").
+// Dialog bot bergaya RPG: hanya satu baris tampil pada satu waktu. Pemain utama
+// tidak pernah mengirim pesan; obrolan murni dipicu kejadian permainan.
+//
+// `onLine(line)` dipanggil tiap baris mulai tampil (dipakai untuk bunyi "blip").
 // `names` (id -> nama final) menggantikan nama bawaan persona dan pemain.
-export function useAutoChat({ onIncomingMessage, names = DEFAULT_NAMES } = {}) {
-  const [messages, setMessages] = useState([
-    createMessage({
-      author: 'Ular Tangga',
-      text: 'Permainan dimulai. Semoga beruntung semuanya!',
-      type: 'system',
-    }),
-  ])
-  const [typingPersona, setTypingPersona] = useState(null)
+//
+// Mengembalikan `line` (baris yang sedang tampil, atau null) dan `triggerEvent`.
+// Baris berikutnya menunggu baris sekarang selesai; antrean dibatasi supaya dialog
+// tidak tertinggal jauh dari jalannya permainan.
+export function useAutoChat({ onLine, names = DEFAULT_NAMES } = {}) {
+  const [line, setLine] = useState(null)
   const queueRef = useRef([])
-  const isTypingRef = useRef(false)
   const timerRef = useRef(null)
-  const processNextRef = useRef(null)
-  const onIncomingRef = useRef(onIncomingMessage)
+  const advanceRef = useRef(null)
+  const onLineRef = useRef(onLine)
   const namesRef = useRef(names)
 
-  const processNext = useCallback(() => {
-    if (isTypingRef.current) return
+  const advance = useCallback(() => {
+    window.clearTimeout(timerRef.current)
+    const next = queueRef.current.shift()
+    if (!next) {
+      timerRef.current = null
+      setLine(null)
+      return
+    }
 
-    const nextMessage = queueRef.current.shift()
-    if (!nextMessage) return
-
-    isTypingRef.current = true
-    setTypingPersona(nextMessage.persona)
-    const delay = 1000 + Math.random() * 500
-
-    timerRef.current = window.setTimeout(() => {
-      setMessages((currentMessages) => [...currentMessages, nextMessage.message])
-      onIncomingRef.current?.(nextMessage.message)
-      isTypingRef.current = false
-      setTypingPersona(null)
-      processNextRef.current?.()
-    }, delay)
+    setLine(next)
+    onLineRef.current?.(next)
+    timerRef.current = window.setTimeout(() => advanceRef.current?.(), getLineDuration(next.text))
   }, [])
 
   useEffect(() => {
-    processNextRef.current = processNext
-  }, [processNext])
+    advanceRef.current = advance
+  }, [advance])
 
   useEffect(() => {
-    onIncomingRef.current = onIncomingMessage
-  }, [onIncomingMessage])
+    onLineRef.current = onLine
+  }, [onLine])
 
   useEffect(() => {
     namesRef.current = names
   }, [names])
 
-  const triggerEvent = useCallback((eventName, player) => {
+  // `extra.target` = pemain lain yang terlibat (mis. yang disalip).
+  const triggerEvent = useCallback((eventName, player, extra = {}) => {
     const reactions = CHAT_TRIGGERS[eventName]
     if (!reactions?.length) return
+    if (Math.random() > (EVENT_CHANCE[eventName] ?? 1)) return
 
-    const reaction = reactions[Math.floor(Math.random() * reactions.length)]
+    // Bot tidak mengomentari dirinya sendiri atau lawan yang terlibat, kecuali tak ada pilihan lain.
+    const involved = [player?.id, extra.target?.id]
+    const others = reactions.filter((reaction) => !involved.includes(reaction.personaId))
+    const pool = others.length ? others : reactions
+    const reaction = pool[Math.floor(Math.random() * pool.length)]
     const basePersona = BOT_PERSONAS[reaction.personaId]
     if (!basePersona) return
 
     // Gaya dan warna persona tetap; hanya nama tampilannya yang bisa diubah pemain.
     const persona = { ...basePersona, name: namesRef.current[basePersona.id] || basePersona.name }
-    const playerName = player?.name ?? 'Pemain'
-    const text = reaction.text.replaceAll('{player}', playerName)
-    queueRef.current.push({
-      persona,
-      message: createMessage({
-        author: persona.name,
-        avatar: persona.avatar,
-        color: persona.color,
-        text,
-        type: 'bot',
-      }),
-    })
-    processNext()
-  }, [processNext])
+    const text = reaction.text
+      .replaceAll('{player}', player?.name ?? 'Pemain')
+      .replaceAll('{target}', extra.target?.name ?? 'lawan')
+    lineCounter += 1
+    const nextLine = { id: `line-${lineCounter}`, persona, text }
 
-  const sendMessage = useCallback((text) => {
-    const trimmedText = text.trim()
-    if (!trimmedText) return
+    if (INTERRUPT_EVENTS.includes(eventName)) {
+      queueRef.current = [nextLine]
+      advance()
+      return
+    }
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      createMessage({ author: namesRef.current.human || DEFAULT_NAMES.human, text: trimmedText, type: 'human' }),
-    ])
-  }, [])
+    queueRef.current.push(nextLine)
+    if (queueRef.current.length > MAX_QUEUED_LINES) queueRef.current.shift()
+    if (!timerRef.current) advance()
+  }, [advance])
+
+  // Sapaan pembuka setelah layar permainan tampil.
+  useEffect(() => {
+    const timer = window.setTimeout(() => triggerEvent('GAME_START'), FIRST_LINE_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [triggerEvent])
 
   useEffect(() => () => {
-    if (timerRef.current) window.clearTimeout(timerRef.current)
+    window.clearTimeout(timerRef.current)
+    timerRef.current = null
     queueRef.current = []
-    isTypingRef.current = false
   }, [])
 
-  return { messages, sendMessage, triggerEvent, typingPersona }
+  return { line, triggerEvent }
 }
