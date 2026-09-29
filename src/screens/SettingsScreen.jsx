@@ -2,6 +2,7 @@ import NameCustomizer from '../components/customize/NameCustomizer.jsx'
 import PawnCustomizer from '../components/customize/PawnCustomizer.jsx'
 import ThemePicker from '../components/customize/ThemePicker.jsx'
 import ScreenShell from '../components/screens/ScreenShell.jsx'
+import LayoutModePicker from '../components/settings/LayoutModePicker.jsx'
 import SettingsSection from '../components/settings/SettingsSection.jsx'
 import ToggleSwitch from '../components/settings/ToggleSwitch.jsx'
 import VolumeSlider from '../components/settings/VolumeSlider.jsx'
@@ -19,8 +20,8 @@ const VOLUME_CONTROLS = [
 // Layar pengaturan. Nilai disimpan di src/settings dan dibaca audio engine
 // (useAudioSync) serta layar permainan. Kelompok baru = tambah <SettingsSection>.
 function SettingsScreen({ onBack }) {
-  const { settings, setVolume, toggleMute, setName, setPawn, setTheme, resetSettings } = useSettings()
-  const { audio, visual } = settings
+  const { settings, setVolume, toggleMute, setName, setPawn, setTheme, setLayoutMode, resetSettings } = useSettings()
+  const { audio, layout, visual } = settings
 
   return (
     <ScreenShell title="Settings" icon="⚙️" onBack={onBack}>
@@ -28,7 +29,7 @@ function SettingsScreen({ onBack }) {
         id="audio"
         icon="🔊"
         title="Audio"
-        description="Atur volume musik latar dan efek suara (kocokan dadu, langkah pion, tangga, ular, dan notifikasi chat)."
+        description="Atur volume musik latar dan efek suara (kocokan dadu, langkah pion, tangga, ular, dan dialog bot)."
       >
         <ToggleSwitch
           label={audio.muted ? 'Suara dimatikan (Muted)' : 'Suara menyala (Unmuted)'}
@@ -49,6 +50,19 @@ function SettingsScreen({ onBack }) {
             />
           ))}
         </div>
+      </SettingsSection>
+
+      <SettingsSection
+        id="layout"
+        icon="📐"
+        title="Tampilan layar"
+        description="Pilih susunan layar permainan. Pilihanmu disimpan di perangkat ini dan langsung dipakai di permainan berikutnya."
+      >
+        <LayoutModePicker value={layout.mode} onChange={setLayoutMode} />
+        <p className="text-xs text-wa-muted">
+          Mode Desktop butuh layar lebar; di layar sempit halaman bisa digeser ke samping. Mode HP tetap ringkas satu kolom
+          meski dibuka di layar lebar.
+        </p>
       </SettingsSection>
 
       <SettingsSection

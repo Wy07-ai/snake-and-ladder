@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import ChatPanel from '../components/chat/ChatPanel.jsx'
+import RpgDialog from '../components/chat/RpgDialog.jsx'
 import GameBoard from '../components/board/GameBoard.jsx'
 import GameControls from '../components/controls/GameControls.jsx'
 import PlayerList from '../components/controls/PlayerList.jsx'
@@ -10,21 +10,34 @@ import { useGame } from '../hooks/useGame.js'
 import { useSettings } from '../settings/useSettings.js'
 
 // Dua callback ini sengaja berada di luar komponen agar referensinya stabil.
-const playNotification = () => playSfx('notification')
+const playDialogBlip = () => playSfx('dialog')
 
-// Layar permainan. Hook game & chat dipasang di sini (bukan di App), sehingga
+const OUTLINE_BUTTON =
+  'rounded-md border border-wa-primary font-semibold text-wa-primary transition hover:bg-wa-soft active:scale-95 disabled:cursor-not-allowed disabled:opacity-60'
+
+// Layar permainan. Hook game & dialog dipasang di sini (bukan di App), sehingga
 // setiap kali pemain menekan Start Game, permainan dimulai dari state bersih
 // dan tidak ada timer bot yang berjalan saat pemain berada di lobby.
+//
+// Dua layout, dipilih di Settings (`settings.layout.mode`) dan dihormati apa adanya,
+// bukan ditebak dari ukuran layar:
+//  - desktop: papan di kiri, sidebar (pemain, dadu, dialog bot) di kanan, tinggi
+//    tepat satu layar tanpa scroll. Di layar sempit halaman menggulir ke samping,
+//    seperti "situs desktop" di browser HP.
+//  - mobile: satu kolom ringkas. Papan di atas, dialog bot di bawahnya, lalu pemain
+//    dan dadu di dasar (terjangkau jempol). Halaman boleh menggulir vertikal.
+// Isi game (hook, papan, kontrol) sama di keduanya; hanya susunannya yang berbeda.
 function GameScreen({ onBackToLobby = () => {} }) {
   const { settings, playerNames, toggleMute } = useSettings()
+  const isMobile = settings.layout.mode === 'mobile'
   // Nama, bidak, dan tema dibaca sekali saat permainan dimulai; mengubahnya dilakukan
   // di layar persiapan atau Settings, bukan di tengah giliran.
   const [players] = useState(() => createPlayers(settings.visual.pawn, playerNames))
   const names = useMemo(() => Object.fromEntries(players.map((player) => [player.id, player.name])), [players])
   const isMuted = settings.audio.muted
-  const { messages, sendMessage, triggerEvent, typingPersona } = useAutoChat({
+  const { line, triggerEvent } = useAutoChat({
     names,
-    onIncomingMessage: playNotification,
+    onLine: playDialogBlip,
   })
   const {
     currentPlayer,
@@ -39,83 +52,112 @@ function GameScreen({ onBackToLobby = () => {} }) {
     playerPosition,
     resetGame,
     roll,
+    rollingValue,
     slidingPlayerId,
     turnStatus,
   } = useGame({ players, onGameEvent: triggerEvent, onSfx: playSfx })
 
+  const muteButton = (
+    <button
+      className={`${OUTLINE_BUTTON} px-3 py-2 text-sm`}
+      type="button"
+      onClick={toggleMute}
+      aria-pressed={isMuted}
+      aria-label={isMuted ? 'Nyalakan suara' : 'Matikan suara'}
+    >
+      <span aria-hidden="true">{isMuted ? '🔇' : '🔊'}</span>
+    </button>
+  )
+
+  const board = (
+    <section className="relative min-h-0 min-w-0" aria-label="Area permainan">
+      <GameBoard
+        layout={isMobile ? 'mobile' : 'desktop'}
+        playerPosition={playerPosition}
+        playerPositions={playerPositions}
+        players={players}
+        slidingPlayerId={slidingPlayerId}
+        theme={settings.visual.theme}
+      />
+    </section>
+  )
+
+  const playerList = (
+    <PlayerList
+      className={isMobile ? 'grid-cols-4' : 'grid-cols-2'}
+      compact={isMobile}
+      players={players}
+      positions={playerPositions}
+      currentPlayerId={currentPlayer.id}
+      isGameOver={isGameOver}
+    />
+  )
+
+  const controls = (
+    <GameControls
+      canRoll={currentPlayer.type === 'human' && !isMoving && !isGameOver}
+      extraRollAvailable={extraRollAvailable}
+      gameWinner={gameWinner}
+      isGameOver={isGameOver}
+      isMoving={isMoving}
+      isRolling={isRolling}
+      lastMove={lastMove}
+      lastRoll={lastRoll}
+      rollingValue={rollingValue}
+      onRoll={roll}
+      onReset={resetGame}
+      turnStatus={turnStatus}
+    />
+  )
+
+  if (isMobile) {
+    return (
+      <main className="mx-auto grid min-h-dvh w-full max-w-[30rem] content-start gap-2.5 p-2.5" data-layout="mobile">
+        <header className="flex items-center justify-between gap-2">
+          <button className={`${OUTLINE_BUTTON} px-3 py-2 text-sm`} type="button" onClick={onBackToLobby} disabled={isMoving}>
+            ← Menu
+          </button>
+          <h1 className="text-xl font-bold leading-tight text-wa-ink">Ular Tangga</h1>
+          {muteButton}
+        </header>
+
+        {board}
+        <RpgDialog compact line={line} players={players} />
+        {playerList}
+        {controls}
+      </main>
+    )
+  }
+
   return (
-    <main className="mx-auto grid w-full max-w-[100rem] gap-3 p-3 md:p-4 fit:h-dvh fit:grid-rows-[auto_minmax(0,1fr)] fit:overflow-hidden">
+    <main
+      className="mx-auto grid h-dvh min-h-[32rem] w-full min-w-[56rem] max-w-[100rem] grid-rows-[auto_minmax(0,1fr)] gap-3 overflow-hidden p-4"
+      data-layout="desktop"
+    >
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-wa-primary">Permainan keluarga</p>
-          <h1 className="text-2xl font-bold leading-tight text-wa-ink md:text-3xl">Ular Tangga</h1>
+          <h1 className="text-3xl font-bold leading-tight text-wa-ink">Ular Tangga</h1>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <p className="rounded-full bg-wa-soft px-4 py-2 text-sm font-semibold text-wa-primary" aria-live="polite">
             {turnStatus}
           </p>
-          <button
-            className="rounded-md border border-wa-primary px-3 py-2 text-sm font-semibold text-wa-primary transition hover:bg-wa-soft active:scale-95"
-            type="button"
-            onClick={toggleMute}
-            aria-pressed={isMuted}
-            aria-label={isMuted ? 'Nyalakan suara' : 'Matikan suara'}
-          >
-            <span aria-hidden="true">{isMuted ? '🔇' : '🔊'}</span>
-          </button>
-          <button
-            className="rounded-md border border-wa-primary px-4 py-2 text-sm font-semibold text-wa-primary transition hover:bg-wa-soft active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-            type="button"
-            onClick={onBackToLobby}
-            disabled={isMoving}
-          >
+          {muteButton}
+          <button className={`${OUTLINE_BUTTON} px-4 py-2 text-sm`} type="button" onClick={onBackToLobby} disabled={isMoving}>
             ← Menu utama
           </button>
         </div>
       </header>
 
-      {/* Layar lebar & tinggi (varian `fit:`): dua kolom setinggi layar. Kolom papan selebar
-          sisi papan (tinggi layar dikurangi header ~5.5rem) dan sidebar 19-28rem, keduanya
-          dipusatkan. Layar lain: menumpuk dan boleh di-scroll. */}
-      <div className="grid gap-3 md:gap-4 fit:min-h-0 fit:grid-cols-[min(calc(100dvh-5.5rem),calc(100%-20rem))_minmax(19rem,28rem)] fit:justify-center">
-        <section className="relative min-w-0 fit:min-h-0" aria-label="Area permainan">
-          <GameBoard
-            playerPosition={playerPosition}
-            playerPositions={playerPositions}
-            players={players}
-            slidingPlayerId={slidingPlayerId}
-            theme={settings.visual.theme}
-          />
-        </section>
-
-        <div className="grid min-w-0 gap-3 fit:min-h-0 fit:grid-rows-[auto_auto_minmax(0,1fr)]">
-          <PlayerList
-            className="grid-cols-2 sm:grid-cols-4 fit:grid-cols-2"
-            players={players}
-            positions={playerPositions}
-            currentPlayerId={currentPlayer.id}
-            isGameOver={isGameOver}
-          />
-          <GameControls
-            canRoll={currentPlayer.type === 'human' && !isMoving && !isGameOver}
-            extraRollAvailable={extraRollAvailable}
-            gameWinner={gameWinner}
-            isGameOver={isGameOver}
-            isMoving={isMoving}
-            isRolling={isRolling}
-            lastMove={lastMove}
-            lastRoll={lastRoll}
-            onRoll={roll}
-            onReset={resetGame}
-            turnStatus={turnStatus}
-          />
-          <ChatPanel
-            className="fit:h-auto"
-            memberNames={players.map((player) => player.name)}
-            messages={messages}
-            onSend={sendMessage}
-            typingPersona={typingPersona}
-          />
+      {/* Dua kolom setinggi layar. Kolom papan selebar sisi papan (tinggi layar dikurangi
+          header ~5.5rem) dan sidebar 19-28rem, keduanya dipusatkan. Dialog bot tepat di bawah dadu. */}
+      <div className="grid min-h-0 grid-cols-[min(calc(max(100dvh,32rem)-5.5rem),calc(100%-20rem))_minmax(19rem,28rem)] justify-center gap-4">
+        {board}
+        <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-3">
+          {playerList}
+          {controls}
+          <RpgDialog className="self-start" line={line} players={players} />
         </div>
       </div>
     </main>

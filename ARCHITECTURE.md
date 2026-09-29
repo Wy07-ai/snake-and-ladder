@@ -1,6 +1,6 @@
 # Architecture
 
-The application is a React single-page game. `src/main.jsx` mounts `App`, which only selects the active screen (via `useNavigation`). The lobby is the initial screen; `GameScreen` composes the board, controls, and chat UI and connects the game and chat hooks.
+The application is a React single-page game. `src/main.jsx` mounts `App`, which only selects the active screen (via `useNavigation`). The lobby is the initial screen; `GameScreen` composes the board, controls, and the bot dialog box, connects the game and dialog hooks, and arranges them in the layout mode the player chose in Settings.
 
 ## Source layout
 
@@ -12,27 +12,27 @@ The application is a React single-page game. `src/main.jsx` mounts `App`, which 
 | `src/components/board/` | `BoardView` renders the themed 100-square board with `Connections` (ladders and snakes) and can size itself to fit its parent (`fit`); `GameBoard` adds the player pawns on top. |
 | `src/components/pawn/` | `Pawn` (shape, color, glossy finish) and `avatarArt.jsx` (the nine SVG characters). |
 | `src/components/customize/` | `NameCustomizer`, `PawnCustomizer`, and `ThemePicker`, shared by the setup screen and Settings. |
-| `src/components/chat/` | Renders the group-chat panel, message bubbles, and message input. |
+| `src/components/chat/` | The RPG-style bot dialog: `RpgDialog` (portrait, name plate, text box) and `TypewriterText` (letter-by-letter typing). The player never types; there is no input. |
 | `src/components/controls/` | Provides the 3D dice (`DiceButton`), game actions, turn status, and the player list. |
 | `src/audio/` | `audioEngine.js` (synthesized SFX and background music) and `useAudioSync` (connects settings to the engine). |
-| `src/data/` | Holds board connections, bot personas, event-to-dialogue variations, pawn options, player-name slots and defaults (`playerNames.js`), and the board theme list. |
+| `src/data/` | Holds board connections, bot personas, event-to-dialogue variations and their probabilities (`chatTriggers.js`), dialog timing (`dialogTiming.js`), layout modes (`layoutModes.js`), pawn options, player-name slots and defaults (`playerNames.js`), and the board theme list. |
 | `src/engine/` | Implements dice, movement, turn-order, and snake/ladder rules (`gameEngine.js`) and pure board geometry (`boardGeometry.js`). |
 | `src/settings/` | Global settings state: defaults and sanitizing (`settingsDefaults.js`), `SettingsProvider`, and the `useSettings` hook. Stores values only; sound is played by `src/audio`. |
-| `src/components/settings/` | Reusable settings controls: `SettingsSection`, `VolumeSlider`, `ToggleSwitch`. |
-| `src/hooks/` | Owns gameplay state, the queued automatic chat behavior, and screen navigation (`useNavigation`). |
-| `src/styles/` | Shared theme tokens and the `fit:` variant (`theme.css`) and the board, board-theme, and 3D dice styles (`board.css`). |
+| `src/components/settings/` | Reusable settings controls: `SettingsSection`, `VolumeSlider`, `ToggleSwitch`, `LayoutModePicker` (Desktop / Mobile cards with a mini floor plan). |
+| `src/hooks/` | Owns gameplay state, the queued automatic bot dialog (`useAutoChat`), and screen navigation (`useNavigation`). |
+| `src/styles/` | Shared theme tokens (`theme.css`); the board, board-theme, and 3D dice styles (`board.css`); the RPG dialog box (`dialog.css`); and the app-wide layout-mode rules (`layout.css`). |
 
 ## Game state and events
 
 `useGame` receives the `players` list (built by `createPlayers` from the chosen pawn) and owns player positions, the active player, the last roll, movement state, the one-use bonus-roll state, and the winner. It uses `gameEngine.js` for dice results, per-square movement, turn rotation, and special-square resolution. Bot turns are scheduled after a thinking delay; the hook updates positions as the pawn moves and reports notable events through its `onGameEvent` callback.
 
-The current event names are `DICE_SIX`, `CLUTCH_ZONE`, `LADDER_CLIMB`, `SNAKE_BITE`, and `GAME_OVER`. The application passes the chat hook's event handler into `useGame`.
+The current event names are `GAME_START` (fired by `useAutoChat` itself shortly after the screen mounts), `DICE_SIX`, `CLUTCH_ZONE`, `LADDER_CLIMB`, `SNAKE_BITE`, `OVERTAKE`, and `GAME_OVER`. `onGameEvent(name, player, extra)` carries an optional `extra`; `OVERTAKE` passes `{ target }`, the front-most opponent the move passed, found by the pure `findPassedPlayers` in `gameEngine.js`. `GameScreen` passes the dialog hook's `triggerEvent` into `useGame`.
 
-`useGame` also reports sound moments through a separate `onSfx(name, options)` callback: `diceRoll`, `step` (with the step index within the move), `ladder`, `snake`, and `win`. The hook knows nothing about audio; `GameScreen` passes `playSfx`. A roll waits `DICE_ROLL_MS` before revealing the number, and a ladder or snake slide waits `SPECIAL_MOVE_MS`; the sound durations are written to fit those values.
+`useGame` also reports sound moments through a separate `onSfx(name, options)` callback: `diceRoll`, `step` (with the step index within the move), `ladder`, `snake`, and `win`. The hook knows nothing about audio; `GameScreen` passes `playSfx`. A roll first waits for the browser to paint the frame that carries the animation class (`nextPaint`: two `requestAnimationFrame`s with a timer fallback for hidden tabs), then fires `diceRoll` and starts the `DICE_ROLL_MS` wait, so the sound, the CSS animation, and the reveal all start from the same frame and the class is only removed after the animation has actually finished. `useGame` also exposes `rollingValue` (the number being rolled) so the dice can show it at touchdown. A ladder or snake slide waits `SPECIAL_MOVE_MS`; the sound durations are written to fit those values.
 
 ## Settings state
 
-`SettingsProvider` wraps `App` in `main.jsx` and holds user settings (`audio.master`, `audio.bgm`, `audio.sfx`, `audio.muted`, `visual.theme`, `visual.pawn` with `avatar`, `shape`, and `color`, and `names` for `human`, `rizky`, `bagas`, and `davin`). Any screen reads or updates them through `useSettings`. Input is always passed through `sanitizeSettings`, so invalid or corrupt stored data cannot crash the app, and changes persist to `localStorage`. `names` stores what the person typed, where an empty string means "use the default name"; `resolveNames` (exposed as `playerNames` by `useSettings`) returns the trimmed final names with defaults filled in. The provider does not play sound. `useAudioSync` (mounted once in `App`) calls `getEffectiveVolume(audio, 'bgm' | 'sfx')` to get the final 0-1 volume (master and mute already applied) and passes it to the audio engine.
+`SettingsProvider` wraps `App` in `main.jsx` and holds user settings (`audio.master`, `audio.bgm`, `audio.sfx`, `audio.muted`, `visual.theme`, `visual.pawn` with `avatar`, `shape`, and `color`, and `layout.mode` (`'desktop'` or `'mobile'`), and `names` for `human`, `rizky`, `bagas`, and `davin`). Any screen reads or updates them through `useSettings`. Input is always passed through `sanitizeSettings`, so invalid or corrupt stored data cannot crash the app, and changes persist to `localStorage`. `names` stores what the person typed, where an empty string means "use the default name"; `resolveNames` (exposed as `playerNames` by `useSettings`) returns the trimmed final names with defaults filled in. `layout.mode` is what the player picked in Settings; when nothing is stored yet (first visit, or data saved before the option existed) `sanitizeSettings` falls back to `detectLayoutMode()`, a one-time guess from the viewport width (below 48rem means mobile). Once saved, the stored choice always wins and `App` mirrors it onto `<html data-layout>`. The provider does not play sound. `useAudioSync` (mounted once in `App`) calls `getEffectiveVolume(audio, 'bgm' | 'sfx')` to get the final 0-1 volume (master and mute already applied) and passes it to the audio engine.
 
 ## Audio
 
@@ -44,37 +44,56 @@ The current event names are `DICE_SIX`, `CLUTCH_ZONE`, `LADDER_CLIMB`, `SNAKE_BI
 
 A board theme is a block of CSS variables in `styles/board.css` keyed by `[data-board-theme='id']`, plus an entry in `data/boardThemes.js`. `BoardView` sets the attribute; cells, ladders, and snakes read the variables. Ladder and snake shapes come from `engine/boardGeometry.js`. To add a theme, add both entries; no component changes are needed.
 
-## Screen fit and the 3D dice
+## Layout modes
 
-The game screen has two layouts, switched by the Tailwind variant `fit:` (`@custom-variant` in `theme.css`, viewport at least 64rem wide and 38rem tall). With `fit:`, `GameScreen` is exactly `100dvh` tall and lays out a board column plus a sidebar (player list, controls, chat with `minmax(0,1fr)` height) so nothing scrolls, in a normal window or in F11. `BoardView` with `fit` fills a `relative` parent and sizes the board to `min(100cqw, 100cqh)` using container query units, so the 10x10 grid stays square whatever the viewport shape; the text, badges, and flags inside cells scale with the board width (`cqw`). Below that size the layout stacks vertically and the page scrolls, with the board capped to the viewport height.
+`GameScreen` renders one of two arrangements from `settings.layout.mode` and honors it as chosen instead of guessing from the viewport. The game content (hooks, board, controls, player list, dialog) is identical; only the composition differs.
 
-`DiceButton` is a CSS 3D cube (six faces, opposite faces sum to 7). While `rolling`, three nested layers animate: `.dice-shake` (rattling in the hand, until the peak), `.dice-hop` (toss arc, scale, and two bounces), and `.dice-cube` (rotation that ends on a full turn so the front face shows the result). Faces show shuffled numbers at a slowing pace until `value` is revealed. The timing is shared through `DICE_ROLL_MS` and `DICE_PEAK_MS` in `gameEngine.js`; keyframes use the same percentages (peak 35%, table contact at 68%, 90%, and 100%), and the `diceRoll` SFX schedules its rattle, throw accent, and bounces from one start time on the audio clock using those constants. Changing the timeline means updating the keyframes in `board.css` and the offsets in `audioEngine.js` together.
+- **Desktop:** `100dvh` tall and never scrolls vertically. A board column sized `min(100dvh - 5.5rem, 100% - 20rem)` sits next to a sidebar of 19-28rem holding the player list, the dice controls, and the bot dialog directly beneath them. `BoardView fit="fill"` fills a `relative` parent and sizes the board to `min(100cqw, 100cqh)` with container query units, so the 10x10 grid stays square; text, badges, and flags scale with the board width (`cqw`). The layout has a `56rem` minimum width, so on a narrow screen the page scrolls sideways, like a "desktop site" in a phone browser.
+- **Mobile:** a single column capped at `30rem`: compact header, board (`BoardView fit="width"`, full width but no taller than `100dvh - 22rem`, at least `18rem`), dialog, a four-across compact `PlayerList`, then the dice at the bottom for thumb reach. The page scrolls vertically only when the screen is very short. `layout.css` additionally caps the whole app (lobby and settings included) to a phone-width column when this mode is active, so it looks the same on a wide monitor.
 
-## Automatic chat flow
+There is no media-query variant for this any more (the old `fit:` variant was removed); the mode is data in `layoutModes.js` and a `LayoutModePicker` in Settings.
 
-`useAutoChat` looks up event reactions in `chatTriggers.js`, resolves each reaction's author in `botPersonas.js` (using the display name from its `names` option), substitutes the player's name, and appends the result to a queue. It displays the selected bot's typing state for 1-1.5 seconds before adding the message. The queue serializes reactions so only one bot types at a time. Human messages are appended immediately. `ChatPanel` renders the shared message state and scrolls its message viewport to the latest item.
+## The 3D dice
+
+`DiceButton` is a CSS 3D cube (six faces, opposite faces sum to 7). While `rolling`, the layers animate together: `.dice-shake` (rattling in the hand until the peak), `.dice-hop` (crouch, toss arc, and squash and stretch at each bounce), `.dice-cube` (rotation that ends on whole turns so the front face shows the result), plus `.dice-shadow`, `.dice-ring` (ripple on impact), and `.dice-glow` (result glow, gold for a 6). Only `transform` and `opacity` are animated and layers get `will-change` only while rolling, so it stays compositor-only. Faces show shuffled numbers at a slowing pace; at touchdown (`DICE_LAND_MS`) the front face switches to `target` (the real result, from `useGame.rollingValue`) and the number is readable while the die bounces to rest. When the button is enabled the die idles with a gentle bob and shrinks slightly when pressed. All motion is switched off under `prefers-reduced-motion`; numbers still change.
+
+The timeline lives in `gameEngine.js` and is shared by three consumers: the peak (`DICE_PEAK_RATIO`, 35%), touchdown (`DICE_LAND_RATIO`, 68%), bounces (`DICE_BOUNCE_RATIOS`, 90% and 98.5%), and the rattle hits (`DICE_SHAKE_HITS`, fractions of the peak) are the same numbers in the `dice-*` keyframes in `board.css`, in the `diceRoll` SFX schedule in `audioEngine.js`, and in `DiceButton` (touchdown reveal). CSS cannot import JS, so the percentages are duplicated in the stylesheet with a comment; changing the timeline means updating the constants, the keyframes, and nothing else.
+
+## Bot dialog flow
+
+The player never sends messages: the dialog is a one-way, event-driven RPG box. `useAutoChat` receives an event from `useGame`, rolls the event's probability (`EVENT_CHANCE`; `DICE_SIX` and `OVERTAKE` do not always speak), looks up reactions in `chatTriggers.js`, and picks one whose bot is not the acting player or the target (falling back to any if none qualifies). The persona comes from `botPersonas.js` with the display name from its `names` option, and `{player}` and `{target}` are substituted. Only one line shows at a time: the current `line` stays for `getLineDuration(text)` (typing time plus a reading pause, from `dialogTiming.js`), then the next queued line replaces it, or the box clears when the queue is empty. The queue holds at most `MAX_QUEUED_LINES` (2, dropping the oldest) so dialog cannot lag behind play, and events in `INTERRUPT_EVENTS` (`GAME_OVER`) replace whatever is showing. A `GAME_START` greeting fires shortly after mount, and `onLine` (a stable callback from `GameScreen`) plays the `dialog` blip for each line.
+
+`RpgDialog` renders the current line: the speaking bot's pawn art as the portrait (looked up in `players` by persona id) with the persona emoji as an expression badge, a name plate in the persona color, and `TypewriterText`. The slot keeps a fixed minimum height so the layout does not jump when lines appear and disappear. The typed text is `aria-hidden`; a visually hidden `role="status"` region announces the full line at once.
 
 ```mermaid
 flowchart LR
     A[App + useNavigation] --> L[LobbyScreen]
     A --> AU[useAudioSync]
     AU --> AE[audioEngine]
+    A -->|data-layout on html| LY[layout.css]
     A -->|Settings| ST[SettingsScreen]
     ST --> SP[useSettings / SettingsProvider]
+    ST --> LM[LayoutModePicker]
+    LM -->|setLayoutMode| SP
     A -->|Start Game| SU[SetupScreen]
     SU --> SP
     SU --> NC[NameCustomizer]
     ST --> NC
     SU -->|Mulai Bermain| GS[GameScreen]
-    GS --> SP
+    SP -->|layout.mode| GS
+    GS -->|desktop or mobile arrangement| I
     GS -->|playSfx| AE
     GS --> B[useGame]
     GS --> C[useAutoChat]
     B -->|onGameEvent| C
+    B -->|onSfx after first painted frame| AE
     B --> D[gameEngine]
-    C --> E[chatTriggers]
+    C --> E[chatTriggers + dialogTiming]
     C --> F[botPersonas]
-    C --> G[ChatPanel]
-    G --> H[ChatMessage and ChatInput]
+    C -->|line| G[RpgDialog]
+    G --> H[TypewriterText]
     B --> I[GameBoard, PlayerList and GameControls]
+    I --> DB[DiceButton]
+    D -->|dice timeline constants| DB
+    D -->|dice timeline constants| AE
 ```

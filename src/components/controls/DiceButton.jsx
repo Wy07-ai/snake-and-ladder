@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { DICE_PEAK_MS, DICE_ROLL_MS } from '../../engine/gameEngine.js'
+import { memo, useEffect, useState } from 'react'
+import { DICE_LAND_MS, DICE_PEAK_MS, DICE_ROLL_MS } from '../../engine/gameEngine.js'
 
 // Posisi titik pada grid 3x3 (indeks 0-8) untuk tiap sisi dadu.
 const PIPS = {
@@ -36,7 +36,8 @@ function scrambleFaces(previous) {
   return Object.fromEntries(FACES.map((face, index) => [face, numbers[index]]))
 }
 
-function DiceFace({ face, value }) {
+// memo: saat angka diacak, hanya sisi yang nilainya berubah yang digambar ulang.
+const DiceFace = memo(function DiceFace({ face, value }) {
   return (
     <span className={`dice-face dice-face--${face}`} aria-hidden="true">
       {value ? (
@@ -48,12 +49,14 @@ function DiceFace({ face, value }) {
       )}
     </span>
   )
-}
+})
 
 // Dadu 3D. Saat `rolling`, kubus dikocok, dilempar, berputar, dan memantul
 // (keyframes `dice-*` di styles/board.css, durasi DICE_ROLL_MS). Angka pada sisi
-// berganti acak dan melambat sampai `value` (hasil sebenarnya) ditampilkan.
-function DiceButton({ value, onRoll, disabled = false, rolling = false }) {
+// berganti acak dan melambat; begitu dadu menyentuh meja (DICE_LAND_MS) sisi depan
+// menampilkan `target` (hasil sebenarnya) sehingga angkanya terbaca selagi dadu
+// memantul dan berhenti. Tanpa `target`, angka baru muncul saat `value` diberikan.
+function DiceButton({ value, target = null, onRoll, disabled = false, rolling = false }) {
   const [scrambled, setScrambled] = useState(() => restFaces(value))
 
   useEffect(() => {
@@ -66,10 +69,22 @@ function DiceButton({ value, onRoll, disabled = false, rolling = false }) {
       delay = Math.min(delay * SCRAMBLE_SLOWDOWN, SCRAMBLE_MAX_MS)
       timer = window.setTimeout(tick, delay)
     }
-    timer = window.setTimeout(tick, delay)
+    // Ganti angka seketika (bukan setelah jeda pertama) supaya tidak ada frame usang.
+    timer = window.setTimeout(tick, 0)
 
-    return () => window.clearTimeout(timer)
-  }, [rolling])
+    // Dadu menyentuh meja: hentikan pengacakan dan tampilkan hasilnya.
+    const land = target
+      ? window.setTimeout(() => {
+          window.clearTimeout(timer)
+          setScrambled(restFaces(target))
+        }, DICE_LAND_MS)
+      : null
+
+    return () => {
+      window.clearTimeout(timer)
+      window.clearTimeout(land)
+    }
+  }, [rolling, target])
 
   const faces = rolling ? scrambled : restFaces(value)
   const label = rolling ? 'Dadu sedang dikocok' : value ? `Angka ${value}` : 'Dadu belum dilempar'
@@ -78,7 +93,7 @@ function DiceButton({ value, onRoll, disabled = false, rolling = false }) {
     <button
       className={`dice-btn relative grid size-20 shrink-0 place-items-center rounded-2xl focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-wa-primary disabled:cursor-not-allowed ${
         rolling ? 'dice-rolling z-10' : 'disabled:opacity-60'
-      }`}
+      }${rolling && target === 6 ? ' dice-six' : ''}`}
       style={{ '--dice-ms': `${DICE_ROLL_MS}ms`, '--dice-peak-ms': `${DICE_PEAK_MS}ms` }}
       type="button"
       onClick={onRoll}
@@ -86,6 +101,8 @@ function DiceButton({ value, onRoll, disabled = false, rolling = false }) {
       aria-label="Lempar dadu"
     >
       <span className="dice-shadow" aria-hidden="true" />
+      <span className="dice-ring" aria-hidden="true" />
+      <span className="dice-glow" aria-hidden="true" />
       <span className="dice-shake">
         <span className="dice-hop">
           <span className="dice-cube" role="img" aria-label={label}>

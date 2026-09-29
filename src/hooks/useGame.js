@@ -4,6 +4,7 @@ import {
   GAME_PLAYERS,
   SPECIAL_MOVE_MS,
   createStartPositions,
+  findPassedPlayers,
   getBotThinkDelay,
   getMovementSteps,
   hasBonusRoll,
@@ -19,7 +20,24 @@ function wait(milliseconds) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
 }
 
-// `onGameEvent` melaporkan kejadian untuk chat (DICE_SIX, LADDER_CLIMB, ...).
+// Menunggu sampai browser benar-benar menggambar frame dengan class animasi terpasang
+// (dua requestAnimationFrame). Timer roll dan SFX dimulai dari sini, bukan dari klik,
+// sehingga bunyi, animasi, dan pergantian angka sejajar sampai hitungan frame.
+// Cadangan timer menjaga permainan tetap jalan saat tab tersembunyi (rAF dijeda).
+function nextPaint() {
+  return new Promise((resolve) => {
+    const fallback = window.setTimeout(resolve, 64)
+    window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() => {
+        window.clearTimeout(fallback)
+        resolve()
+      }),
+    )
+  })
+}
+
+// `onGameEvent(nama, pemain, extra)` melaporkan kejadian untuk dialog bot (DICE_SIX,
+// LADDER_CLIMB, SNAKE_BITE, CLUTCH_ZONE, OVERTAKE dengan `extra.target`, GAME_OVER).
 // `onSfx` melaporkan momen untuk efek suara: 'diceRoll', 'step', 'ladder',
 // 'snake', dan 'win'. Keduanya opsional; hook ini tidak tahu apa pun soal audio.
 export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = noop } = {}) {
@@ -28,6 +46,7 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
   const [lastRoll, setLastRoll] = useState(null)
   const [isRolling, setIsRolling] = useState(false)
   const [isMoving, setIsMoving] = useState(false)
+  const [rollingValue, setRollingValue] = useState(null)
   const [extraRollAvailable, setExtraRollAvailable] = useState(false)
   const [lastMove, setLastMove] = useState(null)
   const [slidingPlayerId, setSlidingPlayerId] = useState(null)
@@ -46,15 +65,20 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
     setIsRolling(true)
     const dice = rollDice()
     const isBonusRoll = extraRollAvailable
+    const startPosition = playerPosition
     let position = playerPosition
     setExtraRollAvailable(false)
     setLastMove(null)
-    onSfx('diceRoll')
+    // `rollingValue` = angka yang akan keluar; dadu menampilkannya begitu menyentuh meja.
+    setRollingValue(dice)
 
     try {
-      // Dadu dikocok dulu; angkanya baru terlihat setelah animasi selesai.
+      // Tunggu frame pertama animasi tampil, lalu mulai bunyi dan hitung mundur bersamaan.
+      await nextPaint()
+      onSfx('diceRoll')
       await wait(DICE_ROLL_MS)
       setIsRolling(false)
+      setRollingValue(null)
       setLastRoll(dice)
       if (dice === 6) onGameEvent('DICE_SIX', currentPlayer)
 
@@ -90,6 +114,12 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
         setSlidingPlayerId(null)
       }
 
+      // Menyalip: pemain melewati lawan yang sebelumnya ada di depannya.
+      if (position < 100) {
+        const passed = findPassedPlayers(players, playerPositions, currentPlayer.id, startPosition, position)
+        if (passed.length) onGameEvent('OVERTAKE', currentPlayer, { target: passed[0] })
+      }
+
       if (position === 100) {
         setGameWinner(currentPlayer)
         setExtraRollAvailable(false)
@@ -105,9 +135,10 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
       isMovingRef.current = false
       setIsMoving(false)
       setIsRolling(false)
+      setRollingValue(null)
       setSlidingPlayerId(null)
     }
-  }, [currentPlayer, extraRollAvailable, isGameOver, onGameEvent, onSfx, playerCount, playerPosition])
+  }, [currentPlayer, extraRollAvailable, isGameOver, onGameEvent, onSfx, playerCount, playerPosition, playerPositions, players])
 
   useEffect(() => {
     if (currentPlayer.type !== 'bot' || isMoving || isGameOver) return undefined
@@ -155,6 +186,7 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
     players,
     resetGame,
     roll,
+    rollingValue,
     slidingPlayerId,
     turnStatus,
   }
