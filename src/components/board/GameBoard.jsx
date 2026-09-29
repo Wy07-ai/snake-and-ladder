@@ -24,7 +24,7 @@ function GameBoard({
   }))
 
   return (
-    <BoardView theme={theme}>
+    <BoardView theme={theme} fit>
       {pawns.map((pawn) => {
         const center = getSquareCenter(pawn.position)
         // Pawn yang meluncur di tangga/ular bergerak lebih lambat agar terlihat.

@@ -135,8 +135,8 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
       ? `${currentPlayer.name} sedang melempar dadu...`
       : currentPlayer.type === 'human'
         ? extraRollAvailable
-          ? 'Giliran Kamu: lemparan ekstra setelah mendapat 6.'
-          : 'Giliran Kamu.'
+          ? `Giliran ${currentPlayer.name}: lemparan ekstra setelah mendapat 6.`
+          : `Giliran ${currentPlayer.name}.`
         : extraRollAvailable
           ? `${currentPlayer.name} mendapat lemparan ekstra, sedang berpikir...`
           : `${currentPlayer.name} sedang berpikir...`

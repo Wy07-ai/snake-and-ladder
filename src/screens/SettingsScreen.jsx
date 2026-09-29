@@ -1,3 +1,4 @@
+import NameCustomizer from '../components/customize/NameCustomizer.jsx'
 import PawnCustomizer from '../components/customize/PawnCustomizer.jsx'
 import ThemePicker from '../components/customize/ThemePicker.jsx'
 import ScreenShell from '../components/screens/ScreenShell.jsx'
@@ -18,7 +19,7 @@ const VOLUME_CONTROLS = [
 // Layar pengaturan. Nilai disimpan di src/settings dan dibaca audio engine
 // (useAudioSync) serta layar permainan. Kelompok baru = tambah <SettingsSection>.
 function SettingsScreen({ onBack }) {
-  const { settings, setVolume, toggleMute, setPawn, setTheme, resetSettings } = useSettings()
+  const { settings, setVolume, toggleMute, setName, setPawn, setTheme, resetSettings } = useSettings()
   const { audio, visual } = settings
 
   return (
@@ -48,6 +49,15 @@ function SettingsScreen({ onBack }) {
             />
           ))}
         </div>
+      </SettingsSection>
+
+      <SettingsSection
+        id="names"
+        icon="🏷️"
+        title="Nama pemain"
+        description="Nama kamu dan ketiga bot. Kolom yang dikosongkan memakai nama bawaan; bisa juga diubah sebelum permainan dimulai."
+      >
+        <NameCustomizer names={settings.names} pawn={visual.pawn} onChange={setName} />
       </SettingsSection>
 
       <SettingsSection

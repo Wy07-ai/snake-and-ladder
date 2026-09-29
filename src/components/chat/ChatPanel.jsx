@@ -1,8 +1,13 @@
 import { useEffect, useRef } from 'react'
 import ChatInput from './ChatInput.jsx'
 import ChatMessage from './ChatMessage.jsx'
+import { DEFAULT_NAMES } from '../../data/playerNames.js'
 
-function ChatPanel({ messages = [], onSend = () => {}, typingPersona = null }) {
+const DEFAULT_MEMBER_NAMES = Object.values(DEFAULT_NAMES)
+
+// `memberNames`: nama anggota grup yang ditampilkan di header. `className`: kelas tambahan
+// untuk root (mis. mengganti tinggi bawaan `h-[32rem]` saat layout memberi tinggi sendiri).
+function ChatPanel({ className = '', memberNames = DEFAULT_MEMBER_NAMES, messages = [], onSend = () => {}, typingPersona = null }) {
   const scrollAreaRef = useRef(null)
 
   useEffect(() => {
@@ -11,10 +16,10 @@ function ChatPanel({ messages = [], onSend = () => {}, typingPersona = null }) {
   }, [messages, typingPersona])
 
   return (
-    <aside className="grid h-[32rem] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-lg border border-wa-primary/15 bg-wa-paper shadow-sm" aria-label="Chat grup permainan">
+    <aside className={`grid h-[32rem] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-lg border border-wa-primary/15 bg-wa-paper shadow-sm ${className}`} aria-label="Chat grup permainan">
       <div className="bg-wa-primary px-4 py-3 text-white">
         <h2 className="text-base font-bold">Ular Tangga</h2>
-        <p className="text-xs text-white/75">Kamu, Rizky, Bagas, Davin</p>
+        <p className="truncate text-xs text-white/75">{memberNames.join(', ')}</p>
         <p className="mt-1 min-h-4 text-xs text-[#b9f4ce]" aria-live="polite">
           {typingPersona ? `${typingPersona.name} is typing...` : ' '}
         </p>

@@ -1,9 +1,10 @@
 import Pawn from '../pawn/Pawn.jsx'
 
 // Daftar pemain: bidak, nama, posisi, dan penanda giliran aktif.
-function PlayerList({ players, positions, currentPlayerId, isGameOver = false }) {
+// `className` mengatur jumlah kolom (bawaan 2, lalu 4 di layar sm ke atas).
+function PlayerList({ className = 'grid-cols-2 sm:grid-cols-4', players, positions, currentPlayerId, isGameOver = false }) {
   return (
-    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Daftar pemain">
+    <ul className={`grid gap-2 ${className}`} aria-label="Daftar pemain">
       {players.map((player) => {
         const isActive = !isGameOver && player.id === currentPlayerId
 

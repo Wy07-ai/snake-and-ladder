@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { SettingsContext } from './SettingsContext.js'
-import { sanitizeSettings } from './settingsDefaults.js'
+import { resolveNames, sanitizeSettings } from './settingsDefaults.js'
 
 const noop = () => {}
 
@@ -8,10 +8,12 @@ const noop = () => {}
 // hook mengembalikan default no-op alih-alih crash.
 const FALLBACK = {
   settings: sanitizeSettings(null),
+  playerNames: resolveNames(null),
   setVolume: noop,
   toggleMute: noop,
   setTheme: noop,
   setPawn: noop,
+  setName: noop,
   resetSettings: noop,
 }
 

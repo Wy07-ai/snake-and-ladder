@@ -1,6 +1,7 @@
 import DiceButton from './DiceButton.jsx'
 
 function GameControls({
+  canRoll = false,
   extraRollAvailable = false,
   gameWinner = null,
   isGameOver = false,
@@ -27,19 +28,19 @@ function GameControls({
   )
 
   return (
-    <section className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-wa-primary/10 bg-wa-paper p-4" aria-label="Kontrol permainan">
-      <div className="flex items-center gap-4">
-        <DiceButton value={lastRoll} rolling={isRolling} onRoll={onRoll} disabled={isMoving || isGameOver || !turnStatus?.startsWith('Giliran Kamu')} />
+    <section className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 rounded-lg border border-wa-primary/10 bg-wa-paper p-4" aria-label="Kontrol permainan">
+      <DiceButton value={lastRoll} rolling={isRolling} onRoll={onRoll} disabled={!canRoll} />
+      <div className="grid justify-items-start gap-2">
         <p className="text-sm text-wa-muted" aria-live="polite" role="status">{status}</p>
+        <button
+          className="rounded-md border border-wa-primary px-3 py-1.5 text-sm font-semibold text-wa-primary transition hover:bg-wa-soft disabled:cursor-not-allowed disabled:opacity-60"
+          type="button"
+          onClick={onReset}
+          disabled={isMoving}
+        >
+          Mulai ulang
+        </button>
       </div>
-      <button
-        className="rounded-md border border-wa-primary px-4 py-2 text-sm font-semibold text-wa-primary transition hover:bg-wa-soft"
-        type="button"
-        onClick={onReset}
-        disabled={isMoving}
-      >
-        Mulai ulang
-      </button>
     </section>
   )
 }
