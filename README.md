@@ -141,7 +141,7 @@ src/data/botPersonas.js
 src/data/chatTriggers.js
 ```
 
-Dengan struktur ini, aturan permainan dan karakter bot dapat dikembangkan tanpa harus mengubah keseluruhan komponen UI.
+Dengan struktur ini. aturan permainan dan karakter bot dapat dikembangkan tanpa harus mengubah keseluruhan komponen UI.
 
 ---
 
