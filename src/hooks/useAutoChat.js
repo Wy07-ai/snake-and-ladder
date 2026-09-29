@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BOT_PERSONAS } from '../data/botPersonas.js'
 import { CHAT_TRIGGERS } from '../data/chatTriggers.js'
+import { DEFAULT_NAMES } from '../data/playerNames.js'
 
 function createMessage({ author, avatar = null, color = null, text, type }) {
   return {
@@ -15,7 +16,8 @@ function createMessage({ author, avatar = null, color = null, text, type }) {
 }
 
 // `onIncomingMessage` dipanggil tiap pesan bot muncul (dipakai untuk bunyi "Ting!").
-export function useAutoChat({ onIncomingMessage } = {}) {
+// `names` (id -> nama final) menggantikan nama bawaan persona dan pemain.
+export function useAutoChat({ onIncomingMessage, names = DEFAULT_NAMES } = {}) {
   const [messages, setMessages] = useState([
     createMessage({
       author: 'Ular Tangga',
@@ -29,6 +31,7 @@ export function useAutoChat({ onIncomingMessage } = {}) {
   const timerRef = useRef(null)
   const processNextRef = useRef(null)
   const onIncomingRef = useRef(onIncomingMessage)
+  const namesRef = useRef(names)
 
   const processNext = useCallback(() => {
     if (isTypingRef.current) return
@@ -57,14 +60,20 @@ export function useAutoChat({ onIncomingMessage } = {}) {
     onIncomingRef.current = onIncomingMessage
   }, [onIncomingMessage])
 
+  useEffect(() => {
+    namesRef.current = names
+  }, [names])
+
   const triggerEvent = useCallback((eventName, player) => {
     const reactions = CHAT_TRIGGERS[eventName]
     if (!reactions?.length) return
 
     const reaction = reactions[Math.floor(Math.random() * reactions.length)]
-    const persona = BOT_PERSONAS[reaction.personaId]
-    if (!persona) return
+    const basePersona = BOT_PERSONAS[reaction.personaId]
+    if (!basePersona) return
 
+    // Gaya dan warna persona tetap; hanya nama tampilannya yang bisa diubah pemain.
+    const persona = { ...basePersona, name: namesRef.current[basePersona.id] || basePersona.name }
     const playerName = player?.name ?? 'Pemain'
     const text = reaction.text.replaceAll('{player}', playerName)
     queueRef.current.push({
@@ -86,7 +95,7 @@ export function useAutoChat({ onIncomingMessage } = {}) {
 
     setMessages((currentMessages) => [
       ...currentMessages,
-      createMessage({ author: 'Kamu', text: trimmedText, type: 'human' }),
+      createMessage({ author: namesRef.current.human || DEFAULT_NAMES.human, text: trimmedText, type: 'human' }),
     ])
   }, [])
 

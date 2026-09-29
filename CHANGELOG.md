@@ -5,6 +5,10 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- Nama kustom: nama pemain utama dan ketiga bot (Rizky, Bagas, Davin) bisa diubah di layar "Siapkan Permainan" maupun Settings lewat `NameCustomizer` (dengan bidak di samping tiap kolom). Kolom yang dikosongkan memakai nama bawaan ("Kamu", "Rizky", "Bagas", "Davin"), maksimal 16 karakter, dan ada peringatan lunak bila ada nama kembar. Nama dipakai di daftar pemain, status giliran, header dan pesan chat, indikator "is typing...", serta reaksi bot yang menyebut nama pemain.
+- `settings.names` (disimpan ke `localStorage`) beserta `setName` dan `playerNames` (nama final) di `useSettings`; data slot nama ada di `src/data/playerNames.js`.
+- Dadu 3D: kubus CSS dengan enam sisi bertitik yang dikocok, dilempar ke udara (skala membesar, bayangan mengecil), berputar, lalu memantul dua kali sebelum berhenti. Angka pada sisi berganti acak dan melambat sesaat sebelum berhenti di hasil sebenarnya. Efek gerak dimatikan bila pengguna memilih *reduced motion*.
+- Varian Tailwind `fit:` (layar minimal 64rem x 38rem) sebagai satu-satunya definisi breakpoint mode "muat satu layar".
 - Main Lobby screen with Start Game, Settings, How to Play, and Exit buttons, shown when the app opens.
 - `useNavigation` hook for screen navigation, separate from game logic.
 - How to Play rules screen, Settings placeholder, and Exit farewell screen.
@@ -21,12 +25,21 @@ All notable changes to this project are documented here. The format follows [Kee
 - Player list under the board showing each pawn, name, square, and whose turn it is.
 
 ### Changed
+- Layar permainan kini muat dalam satu layar (jendela biasa maupun F11) tanpa scrollbar: `BoardView` punya mode `fit` yang menghitung sisi papan dari lebar dan tinggi yang tersedia (container query, `min(100cqw, 100cqh)`) sehingga papan 10x10 selalu persegi. Pada layar lebar, papan berada di kolom kiri, sedangkan daftar pemain, kontrol, dan chat menumpuk di sidebar kanan; pada layar sempit atau pendek, susunan kembali vertikal dan halaman boleh di-scroll.
+- Angka, lencana, dan bendera pada kotak papan ikut membesar/mengecil mengikuti lebar papan (`cqw`).
+- SFX `diceRoll` disusun ulang mengikuti timeline animasi: klik kocokan yang makin rapat, aksen "lempar" tepat di puncak guncangan (`DICE_PEAK_MS`), lalu dua bunyi pantulan saat dadu menyentuh meja. Jadwalnya dihitung dari satu waktu mulai sehingga tetap sinkron dengan layar.
+- `DICE_ROLL_MS` naik dari 700 ke 900 ms agar animasi dadu punya ruang untuk fase kocok, lempar, dan pantul; ditambah `DICE_PEAK_RATIO` dan `DICE_PEAK_MS`.
+- `createPlayers(pawn, names)` dan `useAutoChat({ names })` menerima nama final; `ChatPanel` menerima `memberNames` dan `className`, `PlayerList` menerima `className`.
+- Tombol lempar dadu diaktifkan lewat prop `canRoll` dari `GameScreen`, tidak lagi lewat pencocokan teks status "Giliran Kamu". Status giliran kini memakai nama pemain (mis. "Giliran Andi.").
 - Game UI moved from `App` into `GameScreen`; gameplay behavior is unchanged.
 - "Start Game" now opens the setup screen; the game starts from its "Mulai Bermain" button.
 - `useGame` takes `players` and an optional `onSfx` callback; pawns that take a ladder or snake glide slowly and the turn waits until the slide and sound finish.
 - Settings `visual` now stores `theme` and `pawn`. Values outside the official lists fall back to defaults.
 - Board rendering split into `BoardView`, `Connections`, and `engine/boardGeometry.js`; board colors are CSS variables in `styles/board.css`.
 - Audio pauses while the browser tab is hidden and starts only after the first click or tap, as browsers require.
+
+### Fixed
+- Posisi scroll layar sebelumnya tidak lagi terbawa ke layar berikutnya; setiap pergantian layar kembali ke atas (sebelumnya layar permainan bisa terbuka dalam keadaan ter-scroll setelah menekan "Mulai Bermain" di bagian bawah layar persiapan).
 
 ## [0.4.0] - 2026-09-29 - Phase 4
 

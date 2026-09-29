@@ -1,13 +1,14 @@
+import NameCustomizer from '../components/customize/NameCustomizer.jsx'
 import PawnCustomizer from '../components/customize/PawnCustomizer.jsx'
 import ThemePicker from '../components/customize/ThemePicker.jsx'
 import ScreenShell from '../components/screens/ScreenShell.jsx'
 import SettingsSection from '../components/settings/SettingsSection.jsx'
 import { useSettings } from '../settings/useSettings.js'
 
-// Persiapan sebelum bermain: pemain memilih bidak dan tema papan. Pilihan
+// Persiapan sebelum bermain: pemain memilih nama, bidak, dan tema papan. Pilihan
 // disimpan di settings (persisten), lalu GameScreen membacanya saat dimulai.
 function SetupScreen({ onBack, onStart }) {
-  const { settings, setPawn, setTheme } = useSettings()
+  const { settings, setName, setPawn, setTheme } = useSettings()
 
   return (
     <ScreenShell
@@ -24,6 +25,10 @@ function SetupScreen({ onBack, onStart }) {
         </button>
       }
     >
+      <SettingsSection id="names" icon="🏷️" title="Nama pemain" description="Ganti nama kamu dan ketiga bot. Kolom yang dikosongkan memakai nama bawaan.">
+        <NameCustomizer names={settings.names} pawn={settings.visual.pawn} onChange={setName} />
+      </SettingsSection>
+
       <SettingsSection id="pawn" icon="♟️" title="Bidak kamu" description="Pilih karakter, warna, dan bentuk bidak yang akan berjalan di papan.">
         <PawnCustomizer pawn={settings.visual.pawn} onChange={setPawn} />
       </SettingsSection>

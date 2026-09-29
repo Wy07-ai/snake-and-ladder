@@ -11,7 +11,10 @@ Game **Ular Tangga** berbasis React yang menghadirkan permainan papan klasik den
   - **Bagas** — meme dan santuy
   - **Davin** — kalkulatif dan dingin
 - 💬 **Chat interaktif** yang merespons kejadian dalam permainan
-- 🎯 Animasi perpindahan pion per kotak, dadu yang berguncang, dan pion yang meluncur di tangga/ular
+- 🎯 Animasi perpindahan pion per kotak dan pion yang meluncur di tangga/ular
+- 🎲 **Dadu 3D**: dikocok, dilempar, berputar, dan memantul dengan angka acak yang melambat sebelum berhenti; bunyinya disusun mengikuti animasi
+- 🖥️ **Muat satu layar**: papan tetap persegi dan seluruh panel muat tanpa scroll, baik di jendela biasa maupun fullscreen (F11)
+- 🏷️ **Nama kustom**: ubah nama kamu dan ketiga bot (Rizky, Bagas, Davin) di layar persiapan atau Settings; kolom kosong memakai nama bawaan, dan pilihanmu tersimpan
 - 🧸 **Bidak kustom**: pilih karakter 2D (kucing, kelinci, alien, hantu, astronot, katak), warna, dan bentuk sebelum bermain
 - 🎨 **3 tema papan**: Classic, Cyberpunk, dan Jungle
 - 🔊 **Suara & musik**: kocokan dadu, langkah pion, naik tangga, terperosok ular, notifikasi chat "Ting!", dan musik latar santai (disintesis lewat kode, tanpa file audio)
@@ -36,7 +39,7 @@ src/
 │   ├── board/       # Papan bertema, ular/tangga, dan bidak di papan
 │   ├── chat/        # Panel dan pesan chat
 │   ├── controls/    # Dadu, kontrol game, dan daftar pemain
-│   ├── customize/   # Pemilih bidak dan tema papan
+│   ├── customize/   # Pemilih nama, bidak, dan tema papan
 │   └── pawn/        # Bidak dan gambar karakter SVG
 ├── audio/
 │   ├── audioEngine.js   # SFX dan musik latar (Web Audio)
@@ -46,6 +49,7 @@ src/
 │   ├── boardThemes.js   # Daftar tema papan
 │   ├── pawnOptions.js   # Karakter, warna, dan bentuk bidak
 │   ├── botPersonas.js   # Persona bot
+│   ├── playerNames.js   # Slot dan nama bawaan pemain & bot
 │   └── chatTriggers.js  # Respons chat berdasarkan event
 ├── engine/
 │   ├── gameEngine.js    # Aturan dan logika dasar permainan
@@ -55,7 +59,7 @@ src/
 │   └── useAutoChat.js   # Sistem chat otomatis
 ├── styles/
 │   ├── theme.css
-│   └── board.css        # Papan, tema papan, dan animasi dadu
+│   └── board.css        # Papan, tema papan, dan dadu 3D
 ├── App.jsx
 ├── index.css
 └── main.jsx
@@ -116,6 +120,12 @@ Contohnya, posisi ular dan tangga dapat diatur di:
 
 ```text
 src/data/boardData.js
+```
+
+Nama bawaan pemain dan bot (yang dipakai bila kolom nama dikosongkan) dapat diubah di:
+
+```text
+src/data/playerNames.js
 ```
 
 Persona serta dialog bot dapat disesuaikan melalui:

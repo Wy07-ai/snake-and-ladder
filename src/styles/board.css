@@ -30,6 +30,8 @@
   --snake-tongue: #e03131;
   --snake-glow: none;
 
+  /* Container: ukuran teks, lencana, dan bendera kotak mengikuti lebar papan (cqw). */
+  container-type: inline-size;
   overflow: hidden;
   border: var(--board-frame-width) solid var(--board-frame);
   border-radius: 0.5rem;
@@ -100,7 +102,7 @@
   border: 1px solid var(--cell-line);
   background: var(--cell-a);
   color: var(--cell-ink);
-  font-size: 0.75rem;
+  font-size: clamp(0.7rem, 2.4cqw, 1.5rem);
   font-weight: 600;
 }
 
@@ -127,16 +129,16 @@
 
 .board-badge {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: max(2px, 0.5cqw);
+  right: max(2px, 0.5cqw);
   display: grid;
-  width: 1rem;
-  height: 1rem;
+  width: max(1rem, 3cqw);
+  height: max(1rem, 3cqw);
   place-items: center;
   border-radius: 9999px;
   background: var(--badge-ladder);
   color: var(--badge-ink);
-  font-size: 9px;
+  font-size: max(9px, 1.5cqw);
   font-weight: 700;
   text-shadow: none;
 }
@@ -149,22 +151,8 @@
   position: absolute;
   bottom: 1px;
   left: 2px;
-  font-size: 0.7rem;
+  font-size: clamp(0.7rem, 2.1cqw, 1.4rem);
   line-height: 1;
-}
-
-@media (min-width: 640px) {
-  .board-cell {
-    font-size: 0.875rem;
-  }
-
-  .board-badge {
-    top: 4px;
-    right: 4px;
-    width: 1.25rem;
-    height: 1.25rem;
-    font-size: 10px;
-  }
 }
 
 /* Ular & tangga (SVG di atas papan). */
@@ -229,22 +217,163 @@
   display: none;
 }
 
-/* Dadu berguncang saat dilempar. */
+/* ---- Dadu 3D ------------------------------------------------------------
+   Lapisan (luar -> dalam): .dice-shake (goyang di tangan) > .dice-hop (busur
+   lempar + skala, sekaligus pemberi perspektif) > .dice-cube (putaran 3D).
+   Semua animasi berdurasi --dice-ms (DICE_ROLL_MS) dan berakhir di pose diam,
+   jadi tidak ada lompatan saat kelas .dice-rolling dilepas. Puncak lemparan ada
+   di 35% (DICE_PEAK_RATIO); sentuhan meja di 68%, 90%, dan 100%. Jika angka ini
+   diubah, ubah juga jadwal SFX diceRoll di audio/audioEngine.js. */
+
+.dice-btn {
+  --die: 4rem;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dice-shake,
+.dice-hop {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+.dice-hop {
+  perspective: 520px;
+}
+
+.dice-cube {
+  position: relative;
+  width: var(--die);
+  height: var(--die);
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease-out;
+}
+
+.dice-btn:hover:not(:disabled) .dice-cube {
+  transform: rotateX(-14deg) rotateY(16deg);
+}
+
+.dice-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  place-items: center;
+  padding: 0.6rem;
+  border: 2px solid var(--wa-primary);
+  border-radius: 0.8rem;
+  background: linear-gradient(145deg, #ffffff 0%, #e4f5ec 100%);
+  box-shadow: inset 0 -4px 0 rgba(7, 94, 84, 0.14), inset 0 2px 0 rgba(255, 255, 255, 0.9);
+  backface-visibility: hidden;
+}
+
+.dice-face--front { transform: translateZ(calc(var(--die) / 2)); }
+.dice-face--back { transform: rotateY(180deg) translateZ(calc(var(--die) / 2)); }
+.dice-face--right { transform: rotateY(90deg) translateZ(calc(var(--die) / 2)); }
+.dice-face--left { transform: rotateY(-90deg) translateZ(calc(var(--die) / 2)); }
+.dice-face--top { transform: rotateX(90deg) translateZ(calc(var(--die) / 2)); }
+.dice-face--bottom { transform: rotateX(-90deg) translateZ(calc(var(--die) / 2)); }
+
+.dice-pip {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #23a08f, var(--wa-primary) 65%);
+}
+
+.dice-face-mark {
+  grid-area: 2 / 2;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--wa-primary);
+}
+
+/* Bayangan di meja: mengecil dan memudar saat dadu terlempar tinggi. */
+.dice-shadow {
+  position: absolute;
+  bottom: 0.15rem;
+  width: 3.2rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: rgba(23, 43, 40, 0.22);
+  filter: blur(2px);
+}
+
 @keyframes dice-shake {
   0% { transform: translate(0, 0) rotate(0deg); }
-  20% { transform: translate(-3px, 2px) rotate(-12deg); }
-  40% { transform: translate(3px, -2px) rotate(10deg); }
-  60% { transform: translate(-2px, -3px) rotate(-8deg); }
-  80% { transform: translate(2px, 3px) rotate(9deg); }
+  10% { transform: translate(-2px, 1px) rotate(-6deg); }
+  22% { transform: translate(3px, -2px) rotate(9deg); }
+  36% { transform: translate(-4px, 2px) rotate(-12deg); }
+  50% { transform: translate(5px, -3px) rotate(14deg); }
+  64% { transform: translate(-6px, 3px) rotate(-15deg); }
+  78% { transform: translate(6px, -3px) rotate(15deg); }
+  90% { transform: translate(-3px, 1px) rotate(-8deg); }
   100% { transform: translate(0, 0) rotate(0deg); }
 }
 
-.dice-rolling {
-  animation: dice-shake 0.35s linear infinite;
+@keyframes dice-hop {
+  0% { transform: translateY(0) scale(1); animation-timing-function: ease-out; }
+  12% { transform: translateY(0.1rem) scale(0.94); animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  35% { transform: translateY(-0.9rem) scale(1.32); animation-timing-function: ease-in-out; }
+  50% { transform: translateY(-0.5rem) scale(1.22); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.6); }
+  68% { transform: translateY(0) scale(1); animation-timing-function: ease-out; }
+  72% { transform: translateY(0.05rem) scale(1.06, 0.94); animation-timing-function: ease-out; }
+  80% { transform: translateY(-0.45rem) scale(1.1); animation-timing-function: ease-in; }
+  90% { transform: translateY(0) scale(1); animation-timing-function: ease-out; }
+  94% { transform: translateY(0.03rem) scale(1.03, 0.97); }
+  100% { transform: translateY(0) scale(1); }
 }
 
+@keyframes dice-tumble {
+  0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); animation-timing-function: ease-out; }
+  12% { transform: rotateX(30deg) rotateY(-25deg) rotateZ(0deg); animation-timing-function: ease-in; }
+  35% { transform: rotateX(300deg) rotateY(260deg) rotateZ(90deg); animation-timing-function: linear; }
+  68% { transform: rotateX(700deg) rotateY(1050deg) rotateZ(350deg); animation-timing-function: ease-out; }
+  80% { transform: rotateX(712deg) rotateY(1072deg) rotateZ(357deg); animation-timing-function: ease-out; }
+  90% { transform: rotateX(719deg) rotateY(1079deg) rotateZ(359.5deg); }
+  100% { transform: rotateX(720deg) rotateY(1080deg) rotateZ(360deg); }
+}
+
+@keyframes dice-shadow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  35% { transform: scale(0.55); opacity: 0.45; }
+  68% { transform: scale(1.05); opacity: 1; }
+  80% { transform: scale(0.85); opacity: 0.75; }
+  90% { transform: scale(1); opacity: 1; }
+}
+
+.dice-rolling .dice-shake {
+  animation: dice-shake var(--dice-peak-ms) linear;
+}
+
+.dice-rolling .dice-hop {
+  animation: dice-hop var(--dice-ms) linear;
+}
+
+.dice-rolling .dice-cube {
+  transition: none;
+  animation: dice-tumble var(--dice-ms) linear;
+}
+
+.dice-rolling .dice-shadow {
+  animation: dice-shadow var(--dice-ms) linear;
+}
+
+/* Gerak dimatikan bagi yang memilih reduced motion; angka tetap berganti. */
 @media (prefers-reduced-motion: reduce) {
-  .dice-rolling {
+  .dice-rolling .dice-shake,
+  .dice-rolling .dice-hop,
+  .dice-rolling .dice-cube,
+  .dice-rolling .dice-shadow {
     animation: none;
+  }
+
+  .dice-btn:hover:not(:disabled) .dice-cube {
+    transform: none;
   }
 }

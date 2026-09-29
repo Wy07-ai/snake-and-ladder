@@ -4,9 +4,11 @@ import {
   AUDIO_CHANNELS,
   DEFAULT_SETTINGS,
   loadSettings,
+  resolveNames,
   sanitizeSettings,
   saveSettings,
 } from './settingsDefaults.js'
+import { NAME_IDS } from '../data/playerNames.js'
 
 // State global pengaturan. Dipasang sekali di main.jsx; layar mana pun bisa
 // membacanya lewat useSettings(). Provider ini hanya menyimpan nilai; suara
@@ -49,11 +51,21 @@ function SettingsProvider({ children }) {
     )
   }, [])
 
+  // Mengubah satu nama ('human' | 'rizky' | 'bagas' | 'davin'). Nilai kosong
+  // berarti memakai nama bawaan; pembersihan teks dilakukan sanitizeSettings.
+  const setName = useCallback((id, value) => {
+    if (!NAME_IDS.includes(id)) return
+    setSettings((current) => sanitizeSettings({ ...current, names: { ...current.names, [id]: value } }))
+  }, [])
+
   const resetSettings = useCallback(() => setSettings(sanitizeSettings(DEFAULT_SETTINGS)), [])
 
+  // Nama final (kosong sudah diganti nama bawaan) yang siap dipakai permainan.
+  const playerNames = useMemo(() => resolveNames(settings.names), [settings.names])
+
   const value = useMemo(
-    () => ({ settings, setVolume, toggleMute, setTheme, setPawn, resetSettings }),
-    [settings, setVolume, toggleMute, setTheme, setPawn, resetSettings],
+    () => ({ settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setName, resetSettings }),
+    [settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setName, resetSettings],
   )
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

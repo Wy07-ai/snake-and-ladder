@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import ChatPanel from '../components/chat/ChatPanel.jsx'
 import GameBoard from '../components/board/GameBoard.jsx'
 import GameControls from '../components/controls/GameControls.jsx'
@@ -16,12 +16,14 @@ const playNotification = () => playSfx('notification')
 // setiap kali pemain menekan Start Game, permainan dimulai dari state bersih
 // dan tidak ada timer bot yang berjalan saat pemain berada di lobby.
 function GameScreen({ onBackToLobby = () => {} }) {
-  const { settings, toggleMute } = useSettings()
-  // Bidak dan tema dibaca sekali saat permainan dimulai; mengubahnya dilakukan
+  const { settings, playerNames, toggleMute } = useSettings()
+  // Nama, bidak, dan tema dibaca sekali saat permainan dimulai; mengubahnya dilakukan
   // di layar persiapan atau Settings, bukan di tengah giliran.
-  const [players] = useState(() => createPlayers(settings.visual.pawn))
+  const [players] = useState(() => createPlayers(settings.visual.pawn, playerNames))
+  const names = useMemo(() => Object.fromEntries(players.map((player) => [player.id, player.name])), [players])
   const isMuted = settings.audio.muted
   const { messages, sendMessage, triggerEvent, typingPersona } = useAutoChat({
+    names,
     onIncomingMessage: playNotification,
   })
   const {
@@ -42,11 +44,11 @@ function GameScreen({ onBackToLobby = () => {} }) {
   } = useGame({ players, onGameEvent: triggerEvent, onSfx: playSfx })
 
   return (
-    <main className="mx-auto grid min-h-screen w-full max-w-7xl gap-6 px-4 py-6 md:px-8 md:py-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <main className="mx-auto grid w-full max-w-[100rem] gap-3 p-3 md:p-4 fit:h-dvh fit:grid-rows-[auto_minmax(0,1fr)] fit:overflow-hidden">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-wa-primary">Permainan keluarga</p>
-          <h1 className="mt-2 text-3xl font-bold text-wa-ink md:text-4xl">Ular Tangga</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-wa-primary">Permainan keluarga</p>
+          <h1 className="text-2xl font-bold leading-tight text-wa-ink md:text-3xl">Ular Tangga</h1>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <p className="rounded-full bg-wa-soft px-4 py-2 text-sm font-semibold text-wa-primary" aria-live="polite">
@@ -72,8 +74,11 @@ function GameScreen({ onBackToLobby = () => {} }) {
         </div>
       </header>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <section className="grid gap-4" aria-label="Area permainan">
+      {/* Layar lebar & tinggi (varian `fit:`): dua kolom setinggi layar. Kolom papan selebar
+          sisi papan (tinggi layar dikurangi header ~5.5rem) dan sidebar 19-28rem, keduanya
+          dipusatkan. Layar lain: menumpuk dan boleh di-scroll. */}
+      <div className="grid gap-3 md:gap-4 fit:min-h-0 fit:grid-cols-[min(calc(100dvh-5.5rem),calc(100%-20rem))_minmax(19rem,28rem)] fit:justify-center">
+        <section className="relative min-w-0 fit:min-h-0" aria-label="Area permainan">
           <GameBoard
             playerPosition={playerPosition}
             playerPositions={playerPositions}
@@ -81,13 +86,18 @@ function GameScreen({ onBackToLobby = () => {} }) {
             slidingPlayerId={slidingPlayerId}
             theme={settings.visual.theme}
           />
+        </section>
+
+        <div className="grid min-w-0 gap-3 fit:min-h-0 fit:grid-rows-[auto_auto_minmax(0,1fr)]">
           <PlayerList
+            className="grid-cols-2 sm:grid-cols-4 fit:grid-cols-2"
             players={players}
             positions={playerPositions}
             currentPlayerId={currentPlayer.id}
             isGameOver={isGameOver}
           />
           <GameControls
+            canRoll={currentPlayer.type === 'human' && !isMoving && !isGameOver}
             extraRollAvailable={extraRollAvailable}
             gameWinner={gameWinner}
             isGameOver={isGameOver}
@@ -99,8 +109,14 @@ function GameScreen({ onBackToLobby = () => {} }) {
             onReset={resetGame}
             turnStatus={turnStatus}
           />
-        </section>
-        <ChatPanel messages={messages} onSend={sendMessage} typingPersona={typingPersona} />
+          <ChatPanel
+            className="fit:h-auto"
+            memberNames={players.map((player) => player.name)}
+            messages={messages}
+            onSend={sendMessage}
+            typingPersona={typingPersona}
+          />
+        </div>
       </div>
     </main>
   )

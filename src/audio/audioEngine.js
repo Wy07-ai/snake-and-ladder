@@ -9,6 +9,8 @@
 // audio baru dibuat/dilanjutkan lewat unlockAudio() (dipanggil useAudioSync
 // pada sentuhan/klik pertama). Sebelum itu semua fungsi aman dipanggil tapi diam.
 
+import { DICE_PEAK_MS, DICE_ROLL_MS } from '../engine/gameEngine.js'
+
 const AudioContextClass =
   typeof window !== 'undefined' ? window.AudioContext ?? window.webkitAudioContext : undefined
 
@@ -137,27 +139,40 @@ function noise(dest, { start, duration, gain = 0.2, filter = 'bandpass', frequen
 const STEP_SCALE = [0, 2, 4, 7, 9, 12] // pentatonik mayor: langkah beruntun terdengar naik
 
 const SFX = {
-  // Kocokan dadu ~0.65 dtk: klik cepat yang makin jarang, lalu satu ketukan penutup.
-  diceRoll(t, dest) {
-    const offsets = [0, 0.04, 0.08, 0.13, 0.18, 0.24, 0.31, 0.39, 0.49, 0.6]
-    offsets.forEach((offset, index) => {
-      const fade = 1 - index * 0.05
-      noise(dest, {
-        start: t + offset,
-        duration: 0.045,
-        gain: 0.24 * fade,
-        frequency: rand(2200, 4400),
-        q: 2,
-      })
-      tone(dest, {
-        freq: rand(260, 420),
-        freqEnd: 130,
-        type: 'triangle',
-        start: t + offset,
-        duration: 0.06,
-        gain: 0.12 * fade,
-      })
-    })
+  // Kocokan dadu, disusun mengikuti animasi DiceButton (semua jadwal dihitung dari
+  // satu waktu mulai sehingga tetap sinkron dengan layar):
+  //   0 -> puncak   klik kocokan yang makin rapat dan makin keras (dadu digoyang)
+  //   puncak        aksen "lempar": desis + dentum rendah tepat di titik tertinggi
+  //   puncak -> 68% dadu berputar di udara (ketukan tipis)
+  //   68% / 90% / 98.5%   dadu menyentuh meja: dua pantulan lalu berhenti
+  diceRoll(t, dest, { peakMs = DICE_PEAK_MS, totalMs = DICE_ROLL_MS } = {}) {
+    const peak = peakMs / 1000
+    const total = totalMs / 1000
+
+    const click = (offset, gain) => {
+      noise(dest, { start: t + offset, duration: 0.045, gain, frequency: rand(2200, 4400), q: 2 })
+      tone(dest, { freq: rand(260, 420), freqEnd: 130, type: 'triangle', start: t + offset, duration: 0.06, gain: gain * 0.5 })
+    }
+    const clack = (offset, gain) => {
+      noise(dest, { start: t + offset, duration: 0.06, gain, frequency: rand(2600, 3400), q: 1.4 })
+      tone(dest, { freq: rand(400, 460), freqEnd: 170, type: 'triangle', start: t + offset, duration: 0.09, gain: gain * 0.8 })
+    }
+
+    const rattles = 9
+    for (let index = 0; index < rattles; index += 1) {
+      const progress = index / (rattles - 1)
+      click(peak * 0.94 * progress ** 0.6, 0.1 + 0.18 * progress)
+    }
+
+    noise(dest, { start: t + peak, duration: 0.16, gain: 0.26, frequency: 600, frequencyEnd: 2600, q: 0.8 })
+    tone(dest, { freq: 190, freqEnd: 70, type: 'triangle', start: t + peak, duration: 0.14, gain: 0.26 })
+
+    const landing = total * 0.68
+    ;[0.3, 0.55, 0.8].forEach((share) => click(peak + (landing - peak) * share, 0.09))
+
+    clack(landing, 0.34)
+    clack(total * 0.9, 0.2)
+    clack(total * 0.985, 0.1)
   },
 
   // Langkah pion: "tok" pendek, nadanya naik untuk tiap petak dalam satu lemparan.

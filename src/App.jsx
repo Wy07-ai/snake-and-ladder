@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import ExitScreen from './screens/ExitScreen.jsx'
 import GameScreen from './screens/GameScreen.jsx'
 import HowToPlayScreen from './screens/HowToPlayScreen.jsx'
@@ -12,6 +13,11 @@ import { SCREENS, useNavigation } from './hooks/useNavigation.js'
 function App() {
   const { screen, navigate, goToLobby } = useNavigation()
   useAudioSync()
+
+  // Layar baru selalu dimulai dari atas (posisi scroll layar sebelumnya tidak terbawa).
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [screen])
 
   switch (screen) {
     case SCREENS.SETUP:

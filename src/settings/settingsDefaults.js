@@ -4,6 +4,7 @@
 
 import { BOARD_THEMES, DEFAULT_BOARD_THEME } from '../data/boardThemes.js'
 import { DEFAULT_PAWN, HUMAN_AVATARS, PAWN_COLORS, PAWN_SHAPES } from '../data/pawnOptions.js'
+import { DEFAULT_NAMES, NAME_IDS, NAME_MAX_LENGTH } from '../data/playerNames.js'
 
 export const SETTINGS_STORAGE_KEY = 'ular-tangga:settings:v1'
 
@@ -20,6 +21,9 @@ export const DEFAULT_SETTINGS = {
     theme: DEFAULT_BOARD_THEME,
     pawn: { ...DEFAULT_PAWN },
   },
+  // Nama pilihan pemain. String kosong = "pakai nama bawaan" (lihat resolveNames),
+  // jadi kolom input boleh dikosongkan tanpa menyimpan nilai palsu.
+  names: Object.fromEntries(NAME_IDS.map((id) => [id, ''])),
 }
 
 const clampVolume = (value, fallback) => {
@@ -41,6 +45,31 @@ function sanitizePawn(raw) {
   }
 }
 
+// Membersihkan teks nama saat diketik: buang karakter kontrol dan spasi di depan,
+// batasi panjangnya. Spasi di tengah/belakang sengaja dibiarkan supaya nama dua
+// kata ("Budi Santoso") tetap bisa diketik; pemangkasan akhir dilakukan resolveName.
+export function cleanNameInput(raw) {
+  if (typeof raw !== 'string') return ''
+  // eslint-disable-next-line no-control-regex
+  return raw.replace(/[\u0000-\u001f\u007f]/g, '').replace(/^\s+/, '').slice(0, NAME_MAX_LENGTH)
+}
+
+// Nama final yang dipakai permainan: dirapikan, dan kosong berarti nama bawaan.
+export function resolveName(raw, fallback) {
+  const name = cleanNameInput(raw).replace(/\s+/g, ' ').trim()
+  return name || fallback
+}
+
+export function resolveNames(names) {
+  const source = names && typeof names === 'object' ? names : {}
+  return Object.fromEntries(NAME_IDS.map((id) => [id, resolveName(source[id], DEFAULT_NAMES[id])]))
+}
+
+function sanitizeNames(raw) {
+  const source = raw && typeof raw === 'object' ? raw : {}
+  return Object.fromEntries(NAME_IDS.map((id) => [id, cleanNameInput(source[id])]))
+}
+
 // Menerima data apa pun (mis. dari localStorage yang rusak/lama) dan
 // selalu mengembalikan objek settings yang valid. Tidak pernah melempar error.
 export function sanitizeSettings(raw) {
@@ -59,6 +88,7 @@ export function sanitizeSettings(raw) {
       theme: pickId(visual.theme, BOARD_THEMES, DEFAULT_SETTINGS.visual.theme),
       pawn: sanitizePawn(visual.pawn),
     },
+    names: sanitizeNames(source.names),
   }
 }
 
