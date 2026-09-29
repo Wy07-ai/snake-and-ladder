@@ -52,6 +52,7 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
   const [slidingPlayerId, setSlidingPlayerId] = useState(null)
   const [gameWinner, setGameWinner] = useState(null)
   const isMovingRef = useRef(false)
+  const diceStreaksRef = useRef({})
   const currentPlayer = players[currentPlayerIndex]
   const playerPosition = playerPositions[currentPlayer.id]
   const isGameOver = gameWinner !== null
@@ -80,7 +81,14 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
       setIsRolling(false)
       setRollingValue(null)
       setLastRoll(dice)
-      if (dice === 6) onGameEvent('DICE_SIX', currentPlayer)
+      const previousRoll = diceStreaksRef.current[currentPlayer.id]
+      const streak = previousRoll?.dice === dice ? previousRoll.streak + 1 : 1
+      diceStreaksRef.current[currentPlayer.id] = { dice, streak }
+      if (streak > 1) {
+        onGameEvent('DICE_STREAK', currentPlayer, { dice, streak })
+      } else if (dice === 6) {
+        onGameEvent('DICE_SIX', currentPlayer, { dice, streak })
+      }
 
       const steps = getMovementSteps(position, dice)
       for (const [index, nextPosition] of steps.entries()) {
@@ -93,7 +101,7 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
         }))
         onSfx('step', { index })
         if (previousPosition < 90 && position >= 90) {
-          onGameEvent('CLUTCH_ZONE', currentPlayer)
+          onGameEvent('CLUTCH_ZONE', currentPlayer, { position })
         }
       }
 
@@ -155,6 +163,7 @@ export function useGame({ players = GAME_PLAYERS, onGameEvent = noop, onSfx = no
     setPlayerPositions(createStartPositions(players))
     setCurrentPlayerIndex(0)
     setLastRoll(null)
+    diceStreaksRef.current = {}
     setExtraRollAvailable(false)
     setLastMove(null)
     setGameWinner(null)

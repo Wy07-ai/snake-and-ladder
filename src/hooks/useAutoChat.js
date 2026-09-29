@@ -22,6 +22,7 @@ export function useAutoChat({ onLine, names = DEFAULT_NAMES } = {}) {
   const advanceRef = useRef(null)
   const onLineRef = useRef(onLine)
   const namesRef = useRef(names)
+  const recentReactionsRef = useRef({})
 
   const advance = useCallback(() => {
     window.clearTimeout(timerRef.current)
@@ -58,16 +59,42 @@ export function useAutoChat({ onLine, names = DEFAULT_NAMES } = {}) {
     // Bot tidak mengomentari dirinya sendiri atau lawan yang terlibat, kecuali tak ada pilihan lain.
     const involved = [player?.id, extra.target?.id]
     const others = reactions.filter((reaction) => !involved.includes(reaction.personaId))
-    const pool = others.length ? others : reactions
-    const reaction = pool[Math.floor(Math.random() * pool.length)]
+    const eligible = others.length ? others : reactions
+    const preferredEmotions = eventName === 'SNAKE_BITE'
+      ? ['frustrated', 'angry', 'resigned']
+      : eventName === 'LADDER_CLIMB'
+        ? ['excited', 'proud', 'sarcastic']
+        : eventName === 'DICE_STREAK'
+          ? extra.dice === 1
+            ? ['frustrated', 'suspicious', 'resigned']
+            : ['excited', 'suspicious', 'confused']
+          : eventName === 'OVERTAKE'
+            ? ['sarcastic', 'competitive', 'proud']
+            : eventName === 'CLUTCH_ZONE'
+              ? ['tense', 'nervous', 'dramatic']
+              : eventName === 'DICE_SIX'
+                ? ['excited', 'playful', 'suspicious']
+                : eventName === 'GAME_OVER'
+                  ? ['celebratory', 'resigned', 'sarcastic']
+                  : ['playful', 'confident']
+    const emotionalPool = eligible.filter((reaction) => preferredEmotions.includes(reaction.emotion))
+    const pool = emotionalPool.length ? emotionalPool : eligible
+    const recent = recentReactionsRef.current[eventName] ?? []
+    const freshPool = pool.filter((reaction) => !recent.includes(reaction.text))
+    const selectionPool = freshPool.length ? freshPool : pool
+    const reaction = selectionPool[Math.floor(Math.random() * selectionPool.length)]
     const basePersona = BOT_PERSONAS[reaction.personaId]
     if (!basePersona) return
 
     // Gaya dan warna persona tetap; hanya nama tampilannya yang bisa diubah pemain.
     const persona = { ...basePersona, name: namesRef.current[basePersona.id] || basePersona.name }
+    recentReactionsRef.current[eventName] = [...recent, reaction.text].slice(-6)
     const text = reaction.text
       .replaceAll('{player}', player?.name ?? 'Pemain')
       .replaceAll('{target}', extra.target?.name ?? 'lawan')
+      .replaceAll('{dice}', String(extra.dice ?? '-'))
+      .replaceAll('{streak}', String(extra.streak ?? '-'))
+      .replaceAll('{position}', String(extra.position ?? '-'))
     lineCounter += 1
     const nextLine = { id: `line-${lineCounter}`, persona, text }
 
