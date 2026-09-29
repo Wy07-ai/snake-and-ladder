@@ -1,4 +1,4 @@
-import { ladders, snakes } from '../data/boardData.js'
+import { DEFAULT_BOARD } from '../data/boardPresets.js'
 import { DEFAULT_PAWN } from '../data/pawnOptions.js'
 import { DEFAULT_NAMES } from '../data/playerNames.js'
 
@@ -95,11 +95,12 @@ export function getMovementSteps(position, steps) {
   )
 }
 
-export function resolveSpecialSquare(position) {
-  const ladder = ladders.find((connection) => connection.start === position)
+// `board` = { ladders, snakes } dari preset yang dipilih (lihat engine/boardResolver.js).
+export function resolveSpecialSquare(position, board = DEFAULT_BOARD) {
+  const ladder = board.ladders.find((connection) => connection.start === position)
   if (ladder) return { position: ladder.end, type: 'ladder' }
 
-  const snake = snakes.find((connection) => connection.start === position)
+  const snake = board.snakes.find((connection) => connection.start === position)
   if (snake) return { position: snake.end, type: 'snake' }
 
   return { position, type: null }

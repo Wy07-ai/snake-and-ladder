@@ -2,6 +2,7 @@
 // Audio engine, tema papan, dan bidak membaca nilai dari sini; nilai yang
 // tidak valid selalu dikembalikan ke default oleh sanitizeSettings.
 
+import { BOARD_PRESET_IDS, DEFAULT_PRESET_ID } from '../data/boardPresets.js'
 import { BOARD_THEMES, DEFAULT_BOARD_THEME } from '../data/boardThemes.js'
 import { DEFAULT_LAYOUT_MODE, LAYOUT_MODES, MOBILE_MAX_WIDTH_QUERY } from '../data/layoutModes.js'
 import { DEFAULT_PAWN, HUMAN_AVATARS, PAWN_COLORS, PAWN_SHAPES } from '../data/pawnOptions.js'
@@ -37,6 +38,8 @@ export const DEFAULT_SETTINGS = {
     playerCount: 4,
     playerTypes: DEFAULT_PLAYER_TYPES,
     difficulty: 'medium',
+    // Preset papan (id dari data/boardPresets.js); 'random' = papan acak tiap game baru.
+    boardPreset: DEFAULT_PRESET_ID,
   },
   // Mode tampilan layar permainan ('desktop' | 'mobile'). Disimpan bersama pengaturan
   // lain di localStorage, sehingga layout otomatis mengikuti pilihan pemain.
@@ -140,6 +143,8 @@ export function sanitizeSettings(raw, fallbackLayoutMode = DEFAULT_LAYOUT_MODE) 
           : DEFAULT_PLAYER_TYPES[index],
       ),
       difficulty: BOT_DIFFICULTIES.includes(game.difficulty) ? game.difficulty : DEFAULT_SETTINGS.game.difficulty,
+      // Data lama (tanpa boardPreset) atau id yang sudah dihapus kembali ke preset default.
+      boardPreset: BOARD_PRESET_IDS.includes(game.boardPreset) ? game.boardPreset : DEFAULT_SETTINGS.game.boardPreset,
     },
     layout: {
       mode: pickId(layout.mode, LAYOUT_MODES, fallbackLayoutMode),

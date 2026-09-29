@@ -1,5 +1,6 @@
 import BoardView from './BoardView.jsx'
 import Pawn from '../pawn/Pawn.jsx'
+import { DEFAULT_BOARD } from '../../data/boardPresets.js'
 import { getSquareCenter } from '../../engine/boardGeometry.js'
 
 const DEFAULT_PLAYER = { id: 'human', name: 'Kamu', avatar: 'cat', shape: 'circle', color: '#075e54' }
@@ -14,6 +15,7 @@ function GameBoard({
   playerPosition = 1,
   playerPositions = {},
   players = [DEFAULT_PLAYER],
+  board = DEFAULT_BOARD,
   slidingPlayerId = null,
   theme = 'classic',
   layout = 'desktop',
@@ -25,7 +27,7 @@ function GameBoard({
   }))
 
   return (
-    <BoardView theme={theme} fit={layout === 'mobile' ? 'width' : 'fill'}>
+    <BoardView theme={theme} board={board} fit={layout === 'mobile' ? 'width' : 'fill'}>
       {pawns.map((pawn) => {
         const center = getSquareCenter(pawn.position)
         // Pawn yang meluncur di tangga/ular bergerak lebih lambat agar terlihat.

@@ -1,18 +1,20 @@
-import { ladders, snakes } from '../../data/boardData.js'
+import { useMemo } from 'react'
+import { DEFAULT_BOARD } from '../../data/boardPresets.js'
 import { buildLadder, buildSnake } from '../../engine/boardGeometry.js'
 
-// Bentuk dihitung sekali saat modul dimuat; warna diatur tema lewat CSS (board.css).
-const LADDER_SHAPES = ladders.map((ladder) => ({
-  key: `ladder-${ladder.start}`,
-  ...buildLadder(ladder.start, ladder.end),
-}))
+// Bentuk dihitung ulang hanya saat papan berganti; warna diatur tema lewat CSS (board.css).
+function Connections({ board = DEFAULT_BOARD }) {
+  const { LADDER_SHAPES, SNAKE_SHAPES } = useMemo(() => ({
+    LADDER_SHAPES: board.ladders.map((ladder) => ({
+      key: `ladder-${ladder.start}`,
+      ...buildLadder(ladder.start, ladder.end),
+    })),
+    SNAKE_SHAPES: board.snakes.map((snake) => ({
+      key: `snake-${snake.start}`,
+      ...buildSnake(snake.start, snake.end),
+    })),
+  }), [board])
 
-const SNAKE_SHAPES = snakes.map((snake) => ({
-  key: `snake-${snake.start}`,
-  ...buildSnake(snake.start, snake.end),
-}))
-
-function Connections() {
   return (
     <svg className="pointer-events-none absolute inset-0 z-10 size-full" viewBox="0 0 100 100" aria-hidden="true">
       {LADDER_SHAPES.map((ladder) => (

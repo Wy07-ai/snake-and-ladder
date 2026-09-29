@@ -5,6 +5,11 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- Preset layout papan di "Siapkan Permainan" (`BoardPresetPicker`, `data/boardPresets.js`): 11 preset dengan pratinjau langsung, deskripsi karakter, jumlah tangga/ular, dan perkiraan panjang permainan: Classic Standard, Snake Pit (Hell Mode), Heavenly Ladders, Chaos / Teleport Madness, The Final Wall, Monotone / Long Range, Zig-Zag Trap, Short & Sweet, The Rollercoaster, Original Mini (papan lama), dan Random Generator. Pilihan disimpan di `settings.game.boardPreset`; data lama tanpa nilai ini memakai Classic.
+- Random Generator Mode (`engine/boardGenerator.js`, `engine/boardResolver.js`): papan acak berbenih (seed) yang dibuat baru setiap permainan dimulai dan setiap "Mulai ulang". Seed ditampilkan di header agar papan bisa diulang. Generator hanya menerima papan yang valid dan seimbang.
+- Validasi anti-loop (`validateBoard`): ekor ular/ujung tangga tidak boleh jatuh di pangkal ular/tangga lain (kepala ular tidak pernah langsung terhubung ke pangkal tangga), dan selalu ada jalur dadu dari kotak 1 ke kotak 100 tanpa kotak jebakan permanen. `analyzeBoard` menghitung jalur terpendek dan rata-rata lemparan.
+- `npm run verify:boards` (`scripts/verify-boards.mjs`): memeriksa semua preset dan menguji generator pada 3.000 seed.
+- Nama papan (dan seed papan acak) tampil di layar permainan.
 - Pengaturan permainan di "Siapkan Permainan": mode Solo + COM, Lokal (Pass & Play), Spektator (semua COM), dan Campuran; jumlah pemain 2–4; serta pemilihan Human/COM per slot. Setiap Human dapat mengatur nama, avatar, dan warna sendiri. Pilihan disimpan dalam settings.
 - Tingkat kesulitan bot Easy, Medium, dan Hard. Tingkat ini mengubah tempo berpikir COM dan frekuensi dialog kontekstualnya; hasil dadu tetap acak dan tidak dimanipulasi.
 - Dialog bot RPG kini memiliki banyak variasi per event dengan emosi kontekstual (senang, kesal, curiga, sarkastis, tegang, hingga pasrah), gaya persona yang lebih tegas, reaksi angka dadu berulang, dan perlindungan dari kutipan yang baru saja dipakai.
@@ -34,6 +39,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Player list under the board showing each pawn, name, square, and whose turn it is.
 
 ### Changed
+- `resolveSpecialSquare`, `useGame`, `GameBoard`, `BoardView`, dan `Connections` menerima papan (`board`) sebagai parameter, bukan lagi membaca `boardData.js` secara global. Papan bawaan sekarang preset Classic Standard (9 tangga, 9 ular); papan lama tersedia sebagai "Original Mini".
 - Chat ala WhatsApp diganti dialog RPG: pemain utama tidak lagi mengirim pesan, dan obrolan hanya datang dari Rizky, Bagas, dan Davin berdasarkan kejadian permainan (naik tangga, terperosok ular, menyalip, mendekati garis akhir, angka 6, kemenangan). Hanya satu baris tampil sekaligus; baris berikutnya mengantre (maksimal 2, yang tertua dibuang) dan `GAME_OVER` langsung memotong dialog yang sedang tampil. Bot tidak lagi mengomentari dirinya sendiri atau lawan yang terlibat.
 - `useAutoChat({ onLine, names })` kini mengembalikan `{ line, triggerEvent }` (sebelumnya `messages`, `sendMessage`, `typingPersona`) dan `onIncomingMessage` menjadi `onLine`. `onGameEvent` menerima argumen ketiga `extra` (mis. `{ target }`).
 - Layar permainan mengikuti mode tampilan pilihan pemain, bukan lagi ditebak dari ukuran viewport lewat varian `fit:`. Mode Desktop tetap satu layar penuh dan pada layar sempit halaman bergeser ke samping (seperti "situs desktop"); mode HP menggulir vertikal bila layar sangat pendek. `BoardView` menerima `fit="fill" | "width"` (sebelumnya boolean) dan `GameBoard` menerima `layout`.

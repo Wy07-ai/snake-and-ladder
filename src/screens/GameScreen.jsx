@@ -4,6 +4,7 @@ import GameBoard from '../components/board/GameBoard.jsx'
 import GameControls from '../components/controls/GameControls.jsx'
 import PlayerList from '../components/controls/PlayerList.jsx'
 import { playSfx } from '../audio/audioEngine.js'
+import { resolveBoard } from '../engine/boardResolver.js'
 import { createPlayers } from '../engine/gameEngine.js'
 import { useAutoChat } from '../hooks/useAutoChat.js'
 import { useGame } from '../hooks/useGame.js'
@@ -36,6 +37,9 @@ function GameScreen({ onBackToLobby = () => {} }) {
     ...settings.game,
     pawnsBySlot: settings.visual.pawnsBySlot,
   }))
+  // Papan dipilih sekali saat permainan dimulai. Preset acak digenerate baru di sini, dan
+  // lagi setiap "Mulai ulang" (lihat handleReset), sehingga tiap permainan baru berbeda.
+  const [board, setBoard] = useState(() => resolveBoard(settings.game.boardPreset))
   const names = useMemo(
     () => Object.fromEntries(players.filter((player) => player.type === 'bot').map((player) => [player.id, player.name])),
     [players],
@@ -62,7 +66,21 @@ function GameScreen({ onBackToLobby = () => {} }) {
     rollingValue,
     slidingPlayerId,
     turnStatus,
-  } = useGame({ players, difficulty: settings.game.difficulty, onGameEvent: triggerEvent, onSfx: playSfx })
+  } = useGame({ players, board, difficulty: settings.game.difficulty, onGameEvent: triggerEvent, onSfx: playSfx })
+
+  const handleReset = () => {
+    if (isMoving) return
+    if (board.procedural) setBoard(resolveBoard(board.presetId))
+    resetGame()
+  }
+
+  // Nama papan yang dimainkan; papan acak juga menampilkan seed-nya agar bisa diulang.
+  const boardCaption = (
+    <>
+      Papan: {board.emoji} {board.label}
+      {board.procedural && <span className="ml-2 font-mono normal-case tracking-normal text-wa-muted">seed #{board.seed}</span>}
+    </>
+  )
 
   const muteButton = (
     <button
@@ -76,13 +94,14 @@ function GameScreen({ onBackToLobby = () => {} }) {
     </button>
   )
 
-  const board = (
+  const boardSection = (
     <section className="relative min-h-0 min-w-0" aria-label="Area permainan">
       <GameBoard
         layout={isMobile ? 'mobile' : 'desktop'}
         playerPosition={playerPosition}
         playerPositions={playerPositions}
         players={players}
+        board={board}
         slidingPlayerId={slidingPlayerId}
         theme={settings.visual.theme}
       />
@@ -112,7 +131,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
       lastRoll={lastRoll}
       rollingValue={rollingValue}
       onRoll={roll}
-      onReset={resetGame}
+      onReset={handleReset}
       turnStatus={turnStatus}
     />
   )
@@ -128,7 +147,8 @@ function GameScreen({ onBackToLobby = () => {} }) {
           {muteButton}
         </header>
 
-        {board}
+        <p className="text-center text-xs font-semibold text-wa-primary">{boardCaption}</p>
+        {boardSection}
         <RpgDialog compact line={line} players={players} />
         {playerList}
         {controls}
@@ -143,7 +163,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
     >
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-wa-primary">Permainan keluarga</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-wa-primary">{boardCaption}</p>
           <h1 className="text-3xl font-bold leading-tight text-wa-ink">Ular Tangga</h1>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -160,7 +180,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
       {/* Dua kolom setinggi layar. Kolom papan selebar sisi papan (tinggi layar dikurangi
           header ~5.5rem) dan sidebar 19-28rem, keduanya dipusatkan. Dialog bot tepat di bawah dadu. */}
       <div className="grid min-h-0 grid-cols-[min(calc(max(100dvh,32rem)-5.5rem),calc(100%-20rem))_minmax(19rem,28rem)] justify-center gap-4">
-        {board}
+        {boardSection}
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-3">
           {playerList}
           {controls}

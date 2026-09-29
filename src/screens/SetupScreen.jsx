@@ -1,10 +1,11 @@
+import BoardPresetPicker from '../components/customize/BoardPresetPicker.jsx'
 import PlayerCompositionCustomizer from '../components/customize/PlayerCompositionCustomizer.jsx'
 import ThemePicker from '../components/customize/ThemePicker.jsx'
 import ScreenShell from '../components/screens/ScreenShell.jsx'
 import SettingsSection from '../components/settings/SettingsSection.jsx'
 import { useSettings } from '../settings/useSettings.js'
 
-// Persiapan sebelum bermain: pemain memilih nama, bidak, dan tema papan. Pilihan
+// Persiapan sebelum bermain: pemain memilih nama, bidak, tema, dan preset papan. Pilihan
 // disimpan di settings (persisten), lalu GameScreen membacanya saat dimulai.
 function SetupScreen({ onBack, onStart }) {
   const { settings, setName, setSlotPawn, setGameSettings, setTheme } = useSettings()
@@ -37,6 +38,14 @@ function SetupScreen({ onBack, onStart }) {
 
       <SettingsSection id="theme" icon="🗺️" title="Tema papan" description="Ganti suasana papan agar permainan tidak monoton.">
         <ThemePicker value={settings.visual.theme} onChange={setTheme} />
+      </SettingsSection>
+
+      <SettingsSection id="board-preset" icon="🐍" title="Layout papan" description="Pilih susunan ular dan tangga, dari yang santai sampai neraka. Pilih Random Generator untuk papan baru di setiap permainan.">
+        <BoardPresetPicker
+          value={settings.game.boardPreset}
+          onChange={(boardPreset) => setGameSettings({ boardPreset })}
+          theme={settings.visual.theme}
+        />
       </SettingsSection>
     </ScreenShell>
   )

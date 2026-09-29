@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { DEFAULT_BOARD } from '../data/boardPresets.js'
 import {
   DICE_ROLL_MS,
   GAME_PLAYERS,
@@ -40,7 +41,7 @@ function nextPaint() {
 // LADDER_CLIMB, SNAKE_BITE, CLUTCH_ZONE, OVERTAKE dengan `extra.target`, GAME_OVER).
 // `onSfx` melaporkan momen untuk efek suara: 'diceRoll', 'step', 'ladder',
 // 'snake', dan 'win'. Keduanya opsional; hook ini tidak tahu apa pun soal audio.
-export function useGame({ players = GAME_PLAYERS, difficulty = 'medium', onGameEvent = noop, onSfx = noop } = {}) {
+export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficulty = 'medium', onGameEvent = noop, onSfx = noop } = {}) {
   const [playerPositions, setPlayerPositions] = useState(() => createStartPositions(players))
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [lastRoll, setLastRoll] = useState(null)
@@ -105,7 +106,7 @@ export function useGame({ players = GAME_PLAYERS, difficulty = 'medium', onGameE
         }
       }
 
-      const specialMove = resolveSpecialSquare(position)
+      const specialMove = resolveSpecialSquare(position, board)
       if (specialMove.position !== position) {
         await wait(STEP_DELAY)
         onGameEvent(specialMove.type === 'ladder' ? 'LADDER_CLIMB' : 'SNAKE_BITE', currentPlayer)
@@ -146,7 +147,7 @@ export function useGame({ players = GAME_PLAYERS, difficulty = 'medium', onGameE
       setRollingValue(null)
       setSlidingPlayerId(null)
     }
-  }, [currentPlayer, extraRollAvailable, isGameOver, onGameEvent, onSfx, playerCount, playerPosition, playerPositions, players])
+  }, [board, currentPlayer, extraRollAvailable, isGameOver, onGameEvent, onSfx, playerCount, playerPosition, playerPositions, players])
 
   useEffect(() => {
     if (currentPlayer.type !== 'bot' || isMoving || isGameOver) return undefined

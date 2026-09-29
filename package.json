@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "verify:boards": "node scripts/verify-boards.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

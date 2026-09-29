@@ -1,20 +1,27 @@
+import { useMemo } from 'react'
 import BoardCell from './BoardCell.jsx'
 import Connections from './Connections.jsx'
-import { ladders, snakes } from '../../data/boardData.js'
+import { DEFAULT_BOARD } from '../../data/boardPresets.js'
 import { SQUARES } from '../../engine/boardGeometry.js'
 
-const features = new Map()
-for (const ladder of ladders) {
-  features.set(ladder.start, { type: 'ladder-start', label: 'awal tangga, naik ke ' + ladder.end })
-  features.set(ladder.end, { type: 'ladder-end', label: 'ujung tangga dari ' + ladder.start })
-}
-for (const snake of snakes) {
-  features.set(snake.start, { type: 'snake-start', label: 'kepala ular, turun ke ' + snake.end })
-  features.set(snake.end, { type: 'snake-end', label: 'ujung ular dari ' + snake.start })
+// Petak khusus (label + jenis) untuk sebuah papan. Bila beberapa ujung berbagi satu
+// kotak (mis. banyak ular berekor di kotak 10), yang terakhir menentukan labelnya.
+function buildFeatures({ ladders, snakes }) {
+  const features = new Map()
+  for (const ladder of ladders) {
+    features.set(ladder.start, { type: 'ladder-start', label: 'awal tangga, naik ke ' + ladder.end })
+    features.set(ladder.end, { type: 'ladder-end', label: 'ujung tangga dari ' + ladder.start })
+  }
+  for (const snake of snakes) {
+    features.set(snake.start, { type: 'snake-start', label: 'kepala ular, turun ke ' + snake.end })
+    features.set(snake.end, { type: 'snake-end', label: 'ujung ular dari ' + snake.start })
+  }
+  return features
 }
 
 // Papan tanpa bidak: kotak + ular/tangga dengan tema tertentu. `children`
-// (mis. bidak) dirender di atas papan. `compact` dipakai untuk pratinjau tema.
+// (mis. bidak) dirender di atas papan. `compact` dipakai untuk pratinjau tema dan preset.
+// `board` = { ladders, snakes } (bawaan: preset Classic).
 //
 // `fit` membuat papan selalu persegi (10x10 simetris), dihitung lewat container query:
 //  - 'fill' (layout Desktop): papan mengisi induk, yang harus `relative` dan punya
@@ -22,7 +29,8 @@ for (const snake of snakes) {
 //    tinggi induk), jadi tidak pernah menimbulkan scroll.
 //  - 'width' (layout HP): selebar induk, tetapi tidak lebih tinggi dari sisa layar
 //    setelah dikurangi header, dialog, daftar pemain, dan kontrol (~22rem; minimal 18rem).
-function BoardView({ theme = 'classic', compact = false, fit = false, children }) {
+function BoardView({ theme = 'classic', board: boardLayout = DEFAULT_BOARD, compact = false, fit = false, children }) {
+  const features = useMemo(() => buildFeatures(boardLayout), [boardLayout])
   const board = (
     <div className={`board${compact ? ' board--compact' : ''}`} data-board-theme={theme} aria-hidden={compact || undefined}>
       <div className="relative">
@@ -31,7 +39,7 @@ function BoardView({ theme = 'classic', compact = false, fit = false, children }
             <BoardCell key={square} square={square} feature={features.get(square)} />
           ))}
         </div>
-        <Connections />
+        <Connections board={boardLayout} />
         {children}
       </div>
     </div>
