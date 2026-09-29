@@ -10,12 +10,13 @@ import {
 } from '../engine/gameEngine.js'
 
 const STEP_DELAY = 180
+const noop = () => {}
 
 function wait(milliseconds) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
 }
 
-export function useGame() {
+export function useGame({ onGameEvent = noop } = {}) {
   const [playerPositions, setPlayerPositions] = useState(() =>
     Object.fromEntries(GAME_PLAYERS.map((player) => [player.id, 1])),
   )
@@ -39,22 +40,28 @@ export function useGame() {
     const isBonusRoll = extraRollAvailable
     let position = playerPosition
     setLastRoll(dice)
+    if (dice === 6) onGameEvent('DICE_SIX', currentPlayer)
     setExtraRollAvailable(false)
     setLastMove(null)
 
     try {
       for (const nextPosition of getMovementSteps(position, dice)) {
         await wait(STEP_DELAY)
+        const previousPosition = position
         position = nextPosition
         setPlayerPositions((positions) => ({
           ...positions,
           [currentPlayer.id]: position,
         }))
+        if (previousPosition < 90 && position >= 90) {
+          onGameEvent('CLUTCH_ZONE', currentPlayer)
+        }
       }
 
       const specialMove = resolveSpecialSquare(position)
       if (specialMove.position !== position) {
         await wait(STEP_DELAY)
+        onGameEvent(specialMove.type === 'ladder' ? 'LADDER_CLIMB' : 'SNAKE_BITE', currentPlayer)
         position = specialMove.position
         setPlayerPositions((positions) => ({
           ...positions,
@@ -66,6 +73,7 @@ export function useGame() {
       if (position === 100) {
         setGameWinner(currentPlayer)
         setExtraRollAvailable(false)
+        onGameEvent('GAME_OVER', currentPlayer)
       } else if (hasBonusRoll(dice, isBonusRoll)) {
         setExtraRollAvailable(true)
       } else {
@@ -76,7 +84,7 @@ export function useGame() {
       isMovingRef.current = false
       setIsMoving(false)
     }
-  }, [currentPlayer, extraRollAvailable, isGameOver, playerPosition])
+  }, [currentPlayer, extraRollAvailable, isGameOver, onGameEvent, playerPosition])
 
   useEffect(() => {
     if (currentPlayer.type !== 'bot' || isMoving || isGameOver) return undefined

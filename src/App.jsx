@@ -1,9 +1,11 @@
 import ChatPanel from './components/chat/ChatPanel.jsx'
 import GameBoard from './components/board/GameBoard.jsx'
 import GameControls from './components/controls/GameControls.jsx'
+import { useAutoChat } from './hooks/useAutoChat.js'
 import { useGame } from './hooks/useGame.js'
 
 function App() {
+  const { messages, sendMessage, triggerEvent, typingPersona } = useAutoChat()
   const {
     extraRollAvailable,
     gameWinner,
@@ -17,7 +19,7 @@ function App() {
     resetGame,
     roll,
     turnStatus,
-  } = useGame()
+  } = useGame({ onGameEvent: triggerEvent })
 
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-7xl gap-6 px-4 py-6 md:px-8 md:py-10">
@@ -46,7 +48,7 @@ function App() {
             turnStatus={turnStatus}
           />
         </section>
-        <ChatPanel />
+        <ChatPanel messages={messages} onSend={sendMessage} typingPersona={typingPersona} />
       </div>
     </main>
   )

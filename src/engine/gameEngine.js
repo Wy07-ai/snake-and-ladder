@@ -2,9 +2,9 @@ import { ladders, snakes } from '../data/boardData.js'
 
 export const GAME_PLAYERS = [
   { id: 'human', name: 'Kamu', type: 'human', marker: 'K', color: '#075e54' },
-  { id: 'rizky', name: 'Rizky', type: 'bot', marker: 'R', color: '#1971c2' },
-  { id: 'siti', name: 'Siti', type: 'bot', marker: 'S', color: '#e67700' },
-  { id: 'budi', name: 'Budi', type: 'bot', marker: 'B', color: '#7048e8' },
+  { id: 'rizky', name: 'Rizky', type: 'bot', marker: 'R', color: '#c92a2a' },
+  { id: 'bagas', name: 'Bagas', type: 'bot', marker: 'B', color: '#e67700' },
+  { id: 'davin', name: 'Davin', type: 'bot', marker: 'D', color: '#1971c2' },
 ]
 
 export function rollDice(random = Math.random) {
