@@ -32,11 +32,18 @@ function GameScreen({ onBackToLobby = () => {} }) {
   const isMobile = settings.layout.mode === 'mobile'
   // Nama, bidak, dan tema dibaca sekali saat permainan dimulai; mengubahnya dilakukan
   // di layar persiapan atau Settings, bukan di tengah giliran.
-  const [players] = useState(() => createPlayers(settings.visual.pawn, playerNames))
-  const names = useMemo(() => Object.fromEntries(players.map((player) => [player.id, player.name])), [players])
+  const [players] = useState(() => createPlayers(settings.visual.pawn, playerNames, {
+    ...settings.game,
+    pawnsBySlot: settings.visual.pawnsBySlot,
+  }))
+  const names = useMemo(
+    () => Object.fromEntries(players.filter((player) => player.type === 'bot').map((player) => [player.id, player.name])),
+    [players],
+  )
   const isMuted = settings.audio.muted
   const { line, triggerEvent } = useAutoChat({
     names,
+    difficulty: settings.game.difficulty,
     onLine: playDialogBlip,
   })
   const {
@@ -55,7 +62,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
     rollingValue,
     slidingPlayerId,
     turnStatus,
-  } = useGame({ players, onGameEvent: triggerEvent, onSfx: playSfx })
+  } = useGame({ players, difficulty: settings.game.difficulty, onGameEvent: triggerEvent, onSfx: playSfx })
 
   const muteButton = (
     <button

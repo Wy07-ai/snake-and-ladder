@@ -15,13 +15,14 @@ let lineCounter = 0
 // Mengembalikan `line` (baris yang sedang tampil, atau null) dan `triggerEvent`.
 // Baris berikutnya menunggu baris sekarang selesai; antrean dibatasi supaya dialog
 // tidak tertinggal jauh dari jalannya permainan.
-export function useAutoChat({ onLine, names = DEFAULT_NAMES } = {}) {
+export function useAutoChat({ onLine, names = DEFAULT_NAMES, difficulty = 'medium' } = {}) {
   const [line, setLine] = useState(null)
   const queueRef = useRef([])
   const timerRef = useRef(null)
   const advanceRef = useRef(null)
   const onLineRef = useRef(onLine)
   const namesRef = useRef(names)
+  const difficultyRef = useRef(difficulty)
   const recentReactionsRef = useRef({})
 
   const advance = useCallback(() => {
@@ -50,11 +51,16 @@ export function useAutoChat({ onLine, names = DEFAULT_NAMES } = {}) {
     namesRef.current = names
   }, [names])
 
+  useEffect(() => {
+    difficultyRef.current = difficulty
+  }, [difficulty])
+
   // `extra.target` = pemain lain yang terlibat (mis. yang disalip).
   const triggerEvent = useCallback((eventName, player, extra = {}) => {
     const reactions = CHAT_TRIGGERS[eventName]
     if (!reactions?.length) return
-    if (Math.random() > (EVENT_CHANCE[eventName] ?? 1)) return
+    const chatMultiplier = difficultyRef.current === 'hard' ? 1.5 : difficultyRef.current === 'easy' ? 0.6 : 1
+    if (Math.random() > Math.min(1, (EVENT_CHANCE[eventName] ?? 1) * chatMultiplier)) return
 
     // Bot tidak mengomentari dirinya sendiri atau lawan yang terlibat, kecuali tak ada pilihan lain.
     const involved = [player?.id, extra.target?.id]

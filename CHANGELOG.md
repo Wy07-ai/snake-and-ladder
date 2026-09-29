@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- Pengaturan permainan di "Siapkan Permainan": mode Solo + COM, Lokal (Pass & Play), Spektator (semua COM), dan Campuran; jumlah pemain 2–4; serta pemilihan Human/COM per slot. Setiap Human dapat mengatur nama, avatar, dan warna sendiri. Pilihan disimpan dalam settings.
+- Tingkat kesulitan bot Easy, Medium, dan Hard. Tingkat ini mengubah tempo berpikir COM dan frekuensi dialog kontekstualnya; hasil dadu tetap acak dan tidak dimanipulasi.
 - Dialog bot RPG kini memiliki banyak variasi per event dengan emosi kontekstual (senang, kesal, curiga, sarkastis, tegang, hingga pasrah), gaya persona yang lebih tegas, reaksi angka dadu berulang, dan perlindungan dari kutipan yang baru saja dipakai.
 - Dialog bot bergaya RPG (`RpgDialog`, `TypewriterText`, `styles/dialog.css`): kotak dialog gelap bersudut bertakik dengan potret bot yang sedang bicara (bidak karakternya) plus ekspresi emoji persona, papan nama berwarna persona, huruf monospasi, teks yang diketik huruf demi huruf, dan kursor ▼ berkedip saat selesai. Bot yang bicara diberi animasi mengangguk kecil selama mengetik. Blip pendek (`dialog`) berbunyi tiap baris baru. Pembaca layar membaca teks lengkap lewat wilayah `role="status"`; pengguna *reduced motion* langsung melihat teks penuh tanpa animasi.
 - Kejadian dialog baru: `OVERTAKE` (pemain menyalip lawan; teks memakai `{target}`) dan `GAME_START` (sapaan pembuka). Aturan menyalip ada di `findPassedPlayers` (`gameEngine.js`). `EVENT_CHANCE` membuat `DICE_SIX` dan `OVERTAKE` tidak selalu memicu dialog agar bot tidak cerewet.

@@ -10,6 +10,15 @@ import { DEFAULT_NAMES, NAME_IDS, NAME_MAX_LENGTH } from '../data/playerNames.js
 export const SETTINGS_STORAGE_KEY = 'ular-tangga:settings:v1'
 
 export const AUDIO_CHANNELS = ['master', 'bgm', 'sfx']
+const GAME_MODES = ['single', 'local', 'spectator', 'custom']
+const BOT_DIFFICULTIES = ['easy', 'medium', 'hard']
+const DEFAULT_PLAYER_TYPES = ['human', 'bot', 'bot', 'bot']
+const DEFAULT_SLOT_PAWNS = {
+  human: { ...DEFAULT_PAWN },
+  rizky: { ...DEFAULT_PAWN, color: '#2f9e44' },
+  bagas: { ...DEFAULT_PAWN, color: '#0c8599' },
+  davin: { ...DEFAULT_PAWN, color: '#7048e8' },
+}
 
 export const DEFAULT_SETTINGS = {
   audio: {
@@ -21,6 +30,13 @@ export const DEFAULT_SETTINGS = {
   visual: {
     theme: DEFAULT_BOARD_THEME,
     pawn: { ...DEFAULT_PAWN },
+    pawnsBySlot: DEFAULT_SLOT_PAWNS,
+  },
+  game: {
+    mode: 'single',
+    playerCount: 4,
+    playerTypes: DEFAULT_PLAYER_TYPES,
+    difficulty: 'medium',
   },
   // Mode tampilan layar permainan ('desktop' | 'mobile'). Disimpan bersama pengaturan
   // lain di localStorage, sehingga layout otomatis mengikuti pilihan pemain.
@@ -92,8 +108,11 @@ export function detectLayoutMode() {
 export function sanitizeSettings(raw, fallbackLayoutMode = DEFAULT_LAYOUT_MODE) {
   const source = raw && typeof raw === 'object' ? raw : {}
   const layout = source.layout && typeof source.layout === 'object' ? source.layout : {}
+  const game = source.game && typeof source.game === 'object' ? source.game : {}
   const audio = source.audio && typeof source.audio === 'object' ? source.audio : {}
   const visual = source.visual && typeof source.visual === 'object' ? source.visual : {}
+  const pawnsBySlot = visual.pawnsBySlot && typeof visual.pawnsBySlot === 'object' ? visual.pawnsBySlot : {}
+  const playerTypes = Array.isArray(game.playerTypes) ? game.playerTypes : DEFAULT_PLAYER_TYPES
 
   return {
     audio: {
@@ -105,6 +124,22 @@ export function sanitizeSettings(raw, fallbackLayoutMode = DEFAULT_LAYOUT_MODE) 
     visual: {
       theme: pickId(visual.theme, BOARD_THEMES, DEFAULT_SETTINGS.visual.theme),
       pawn: sanitizePawn(visual.pawn),
+      pawnsBySlot: Object.fromEntries(NAME_IDS.map((id) => [
+        id,
+        sanitizePawn({ ...DEFAULT_SLOT_PAWNS[id], ...pawnsBySlot[id] }),
+      ])),
+    },
+    game: {
+      mode: GAME_MODES.includes(game.mode) ? game.mode : DEFAULT_SETTINGS.game.mode,
+      playerCount: Number.isInteger(game.playerCount)
+        ? Math.min(4, Math.max(2, game.playerCount))
+        : DEFAULT_SETTINGS.game.playerCount,
+      playerTypes: NAME_IDS.map((_, index) =>
+        playerTypes[index] === 'bot' || playerTypes[index] === 'human'
+          ? playerTypes[index]
+          : DEFAULT_PLAYER_TYPES[index],
+      ),
+      difficulty: BOT_DIFFICULTIES.includes(game.difficulty) ? game.difficulty : DEFAULT_SETTINGS.game.difficulty,
     },
     layout: {
       mode: pickId(layout.mode, LAYOUT_MODES, fallbackLayoutMode),

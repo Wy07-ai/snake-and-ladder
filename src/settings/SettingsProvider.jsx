@@ -52,6 +52,24 @@ function SettingsProvider({ children }) {
     )
   }, [])
 
+  const setSlotPawn = useCallback((id, patch) => {
+    if (!NAME_IDS.includes(id)) return
+    setSettings((current) => sanitizeSettings({
+      ...current,
+      visual: {
+        ...current.visual,
+        pawnsBySlot: {
+          ...current.visual.pawnsBySlot,
+          [id]: { ...current.visual.pawnsBySlot[id], ...patch },
+        },
+      },
+    }))
+  }, [])
+
+  const setGameSettings = useCallback((patch) => {
+    setSettings((current) => sanitizeSettings({ ...current, game: { ...current.game, ...patch } }))
+  }, [])
+
   // Mode tampilan ('desktop' | 'mobile'); nilai lain diabaikan oleh sanitizeSettings.
   const setLayoutMode = useCallback((mode) => {
     setSettings((current) => sanitizeSettings({ ...current, layout: { ...current.layout, mode } }, current.layout.mode))
@@ -74,8 +92,8 @@ function SettingsProvider({ children }) {
   const playerNames = useMemo(() => resolveNames(settings.names), [settings.names])
 
   const value = useMemo(
-    () => ({ settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setLayoutMode, setName, resetSettings }),
-    [settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setLayoutMode, setName, resetSettings],
+    () => ({ settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setSlotPawn, setGameSettings, setLayoutMode, setName, resetSettings }),
+    [settings, playerNames, setVolume, toggleMute, setTheme, setPawn, setSlotPawn, setGameSettings, setLayoutMode, setName, resetSettings],
   )
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

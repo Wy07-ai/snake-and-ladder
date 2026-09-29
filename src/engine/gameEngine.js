@@ -31,13 +31,23 @@ export const BOT_PLAYERS = [
 
 // Susun daftar pemain: bidak pemain manusia mengikuti pilihan (avatar, bentuk, warna),
 // dan `names` (id -> nama final) mengganti nama bawaan pemain maupun bot.
-export function createPlayers(pawn = DEFAULT_PAWN, names = DEFAULT_NAMES) {
-  const nameOf = (id) => names[id] || DEFAULT_NAMES[id]
-
-  return [
-    { id: 'human', name: nameOf('human'), type: 'human', ...DEFAULT_PAWN, ...pawn },
-    ...BOT_PLAYERS.map((bot) => ({ ...bot, name: nameOf(bot.id) })),
+export function createPlayers(pawn = DEFAULT_PAWN, names = DEFAULT_NAMES, options = {}) {
+  const playerCount = Math.min(4, Math.max(2, options.playerCount ?? 4))
+  const playerTypes = options.playerTypes ?? ['human', 'bot', 'bot', 'bot']
+  const slotPawns = options.pawnsBySlot ?? {}
+  const slots = [
+    { id: 'human', bot: { avatar: 'fox', shape: 'circle', color: '#495057' } },
+    ...BOT_PLAYERS.map((bot) => ({ id: bot.id, bot })),
   ]
+
+  return slots.slice(0, playerCount).map(({ id, bot }, index) => {
+    const type = playerTypes[index] === 'bot' ? 'bot' : 'human'
+    const botName = id === 'human' ? 'Bot 1' : bot.name
+    const visual = type === 'bot' ? bot : { ...DEFAULT_PAWN, ...pawn, ...slotPawns[id] }
+
+    const fallbackName = type === 'bot' && id === 'human' ? botName : DEFAULT_NAMES[id]
+    return { ...visual, id, name: names[id] || fallbackName, type }
+  })
 }
 
 export const GAME_PLAYERS = createPlayers()
@@ -58,8 +68,19 @@ export function getNextPlayerIndex(currentIndex, playerCount = GAME_PLAYERS.leng
   return (currentIndex + 1) % playerCount
 }
 
-export function getBotThinkDelay(random = Math.random) {
-  return 1500 + random() * 500
+export function getBotThinkDelay(difficulty = 'medium', random = Math.random) {
+  if (typeof difficulty === 'function') {
+    random = difficulty
+    difficulty = 'medium'
+  }
+
+  const ranges = {
+    easy: [2300, 3000],
+    medium: [1500, 2000],
+    hard: [850, 1250],
+  }
+  const [minimum, maximum] = ranges[difficulty] ?? ranges.medium
+  return minimum + random() * (maximum - minimum)
 }
 
 export function movePlayer(position, steps) {
