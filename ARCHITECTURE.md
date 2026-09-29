@@ -29,8 +29,10 @@ The current event names are `DICE_SIX`, `CLUTCH_ZONE`, `LADDER_CLIMB`, `SNAKE_BI
 
 ```mermaid
 flowchart LR
-    A[App] --> B[useGame]
-    A --> C[useAutoChat]
+    A[App + useNavigation] --> L[LobbyScreen]
+    A -->|Start Game| GS[GameScreen]
+    GS --> B[useGame]
+    GS --> C[useAutoChat]
     B -->|onGameEvent| C
     B --> D[gameEngine]
     C --> E[chatTriggers]
