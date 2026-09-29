@@ -8,11 +8,11 @@ import {
   createStartPositions,
   findPassedPlayers,
   getBotThinkDelay,
+  getFinalStandings,
   getFinishedStandings,
   getMovementSteps,
   hasBonusRoll,
   getNextActivePlayerIndex,
-  getNextPlayerIndex,
   getQuickFinishStandings,
   resolveSpecialSquare,
   rollDice,
@@ -63,10 +63,10 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
   const currentPlayer = players[currentPlayerIndex]
   const playerPosition = playerPositions[currentPlayer.id]
   const isGameOver = gameWinner !== null
-  const playerCount = players.length
 
   const roll = useCallback(async () => {
     if (isMovingRef.current || isGameOver) return
+    if (playerPosition >= 100 || finishedPlayerIds.includes(currentPlayer.id)) return
 
     isMovingRef.current = true
     setIsMoving(true)
@@ -147,22 +147,38 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
           setGameWinner(currentPlayer)
           onGameEvent('GAME_OVER', currentPlayer)
         } else {
-          const nextFinishedPlayerIds = [...finishedPlayerIds, currentPlayer.id]
+          const nextPositions = { ...playerPositions, [currentPlayer.id]: 100 }
+          const nextFinishedPlayerIds = finishedPlayerIds.includes(currentPlayer.id)
+            ? finishedPlayerIds
+            : [...finishedPlayerIds, currentPlayer.id]
+          const remainingPlayers = players.filter((player) =>
+            !nextFinishedPlayerIds.includes(player.id) && nextPositions[player.id] < 100,
+          )
           setFinishedPlayerIds(nextFinishedPlayerIds)
-          if (nextFinishedPlayerIds.length === playerCount) {
+          if (remainingPlayers.length <= 1) {
             const winner = players.find((player) => player.id === nextFinishedPlayerIds[0])
-            setFinalStandings(getFinishedStandings(nextFinishedPlayerIds, players))
+            setFinalStandings(getFinalStandings(nextFinishedPlayerIds, players, nextPositions))
             setGameWinner(winner)
             onGameEvent('GAME_OVER', winner)
           } else {
-            setCurrentPlayerIndex(getNextActivePlayerIndex(currentPlayerIndex, players, nextFinishedPlayerIds))
+            setCurrentPlayerIndex(getNextActivePlayerIndex(
+              currentPlayerIndex,
+              players,
+              nextPositions,
+              nextFinishedPlayerIds,
+            ))
           }
         }
       } else if (hasBonusRoll(dice)) {
         setExtraRollAvailable(true)
       } else {
         setExtraRollAvailable(false)
-        setCurrentPlayerIndex((index) => getNextPlayerIndex(index, playerCount))
+        setCurrentPlayerIndex(getNextActivePlayerIndex(
+          currentPlayerIndex,
+          players,
+          playerPositions,
+          finishedPlayerIds,
+        ))
       }
     } finally {
       isMovingRef.current = false
@@ -171,17 +187,23 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
       setRollingValue(null)
       setSlidingPlayerId(null)
     }
-  }, [board, currentPlayer, currentPlayerIndex, finishMode, finishedPlayerIds, isGameOver, onGameEvent, onSfx, playerCount, playerPosition, playerPositions, players])
+  }, [board, currentPlayer, currentPlayerIndex, finishMode, finishedPlayerIds, isGameOver, onGameEvent, onSfx, playerPosition, playerPositions, players])
 
   useEffect(() => {
-    if (currentPlayer.type !== 'bot' || isMoving || isGameOver) return undefined
+    if (
+      currentPlayer.type !== 'bot'
+      || playerPosition >= 100
+      || finishedPlayerIds.includes(currentPlayer.id)
+      || isMoving
+      || isGameOver
+    ) return undefined
 
     const timer = window.setTimeout(() => {
       void roll()
     }, getBotThinkDelay(difficulty))
 
     return () => window.clearTimeout(timer)
-  }, [currentPlayer, difficulty, isGameOver, isMoving, roll])
+  }, [currentPlayer, difficulty, finishedPlayerIds, isGameOver, isMoving, playerPosition, roll])
 
   function resetGame() {
     if (isMovingRef.current) return

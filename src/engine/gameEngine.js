@@ -68,13 +68,14 @@ export function getNextPlayerIndex(currentIndex, playerCount = GAME_PLAYERS.leng
   return (currentIndex + 1) % playerCount
 }
 
-export function getNextActivePlayerIndex(currentIndex, players, finishedPlayerIds) {
+export function getNextActivePlayerIndex(currentIndex, players, positions, finishedPlayerIds = []) {
   const finished = new Set(finishedPlayerIds)
-  for (let offset = 1; offset <= players.length; offset += 1) {
+  for (let offset = 1; offset < players.length; offset += 1) {
     const index = (currentIndex + offset) % players.length
-    if (!finished.has(players[index].id)) return index
+    const player = players[index]
+    if (!finished.has(player.id) && positions[player.id] < 100) return index
   }
-  return currentIndex
+  return -1
 }
 
 export function getQuickFinishStandings(players, positions, winnerId) {
@@ -92,10 +93,25 @@ export function getQuickFinishStandings(players, positions, winnerId) {
 
 export function getFinishedStandings(finishedPlayerIds, players) {
   const playerById = new Map(players.map((player) => [player.id, player]))
-  return finishedPlayerIds.flatMap((id, index) => {
+  const uniqueIds = [...new Set(finishedPlayerIds)]
+  return uniqueIds.flatMap((id, index) => {
     const player = playerById.get(id)
     return player ? [{ ...player, place: index + 1, position: 100 }] : []
   })
+}
+
+export function getFinalStandings(finishedPlayerIds, players, positions) {
+  const finishedStandings = getFinishedStandings(finishedPlayerIds, players)
+  const finished = new Set(finishedStandings.map((entry) => entry.id))
+  const remainingPlayers = players
+    .filter((player) => !finished.has(player.id))
+    .sort((a, b) => positions[b.id] - positions[a.id])
+
+  return [...finishedStandings, ...remainingPlayers.map((player) => ({
+    ...player,
+    place: finishedStandings.length + remainingPlayers.indexOf(player) + 1,
+    position: positions[player.id],
+  }))]
 }
 
 export function getBotThinkDelay(difficulty = 'medium', random = Math.random) {
