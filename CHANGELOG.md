@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use semantic versioning.
 
+## [Unreleased]
+
+### Added
+- Main Lobby screen with Start Game, Settings, How to Play, and Exit buttons, shown when the app opens.
+- `useNavigation` hook for screen navigation, separate from game logic.
+- How to Play rules screen, Settings placeholder, and Exit farewell screen.
+- "Menu utama" button in the game screen to return to the lobby.
+
+### Changed
+- Game UI moved from `App` into `GameScreen`; gameplay behavior is unchanged.
+
 ## [0.4.0] - 2026-09-29 - Phase 4
 
 ### Added

@@ -1,17 +1,20 @@
 # Architecture
 
-The application is a React single-page game. `src/main.jsx` mounts `App`, which composes the board, controls, and chat UI and connects the game and chat hooks.
+The application is a React single-page game. `src/main.jsx` mounts `App`, which only selects the active screen (via `useNavigation`). The lobby is the initial screen; `GameScreen` composes the board, controls, and chat UI and connects the game and chat hooks.
 
 ## Source layout
 
 | Path | Responsibility |
 | --- | --- |
+| `src/screens/` | Top-level screens: `LobbyScreen`, `GameScreen`, `HowToPlayScreen`, `SettingsScreen`, `ExitScreen`. |
+| `src/components/lobby/` | Lobby-specific UI such as the menu button. |
+| `src/components/screens/` | Shared shell for secondary screens (title, back button). |
 | `src/components/board/` | Renders the 100-square board, special-square markers, connections, and player pawns. |
 | `src/components/chat/` | Renders the group-chat panel, message bubbles, and message input. |
 | `src/components/controls/` | Provides dice and game actions, and displays turn status. |
 | `src/data/` | Holds board connections, bot personas, and event-to-dialogue variations. |
 | `src/engine/` | Implements dice, movement, turn-order, and snake/ladder rules as reusable functions. |
-| `src/hooks/` | Owns gameplay state and the queued automatic chat behavior. |
+| `src/hooks/` | Owns gameplay state, the queued automatic chat behavior, and screen navigation (`useNavigation`). |
 | `src/styles/` | Defines shared theme tokens used by Tailwind and the application. |
 
 ## Game state and events
