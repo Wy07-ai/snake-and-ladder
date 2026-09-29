@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows [Kee
 - Main Lobby screen with Start Game, Settings, How to Play, and Exit buttons, shown when the app opens.
 - `useNavigation` hook for screen navigation, separate from game logic.
 - How to Play rules screen, Settings placeholder, and Exit farewell screen.
+- Functional Settings screen with an Audio section (Master, BGM, and SFX volume sliders plus a Mute/Unmute switch) and a reserved Gameplay / Visual section for upcoming theme options.
+- Global settings state in `src/settings/` (`SettingsProvider`, `useSettings`, `getEffectiveVolume`); values are validated and persisted to `localStorage`, falling back to defaults if storage is unavailable or corrupt.
+- Reusable settings UI: `SettingsSection`, `VolumeSlider`, and `ToggleSwitch`.
 - "Menu utama" button in the game screen to return to the lobby.
 
 ### Changed

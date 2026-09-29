@@ -4,7 +4,7 @@ Planned work is grouped by priority. Items are proposals and may change as the p
 
 ## Next
 
-- **Sound effects:** Add optional dice-roll, movement, ladder, snake, and notification sounds with a mute control.
+- **Sound effects:** Add optional dice-roll, movement, ladder, snake, and notification sounds with a mute control. Volume and mute settings already exist; the audio engine should read them via `getEffectiveVolume`.
 - **Custom avatars:** Let players choose or personalize their pawn and chat avatar.
 - **Theme selection:** Add a dark/light theme toggle and remember the selected preference.
 
