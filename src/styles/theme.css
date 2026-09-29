@@ -1,0 +1,19 @@
+:root {
+  --wa-primary: #075e54;
+  --wa-green: #25d366;
+  --wa-soft: #dcf8c6;
+  --wa-canvas: #f0f2f5;
+  --wa-paper: #ffffff;
+  --wa-ink: #172b28;
+  --wa-muted: #66736f;
+}
+
+@theme inline {
+  --color-wa-primary: var(--wa-primary);
+  --color-wa-green: var(--wa-green);
+  --color-wa-soft: var(--wa-soft);
+  --color-wa-canvas: var(--wa-canvas);
+  --color-wa-paper: var(--wa-paper);
+  --color-wa-ink: var(--wa-ink);
+  --color-wa-muted: var(--wa-muted);
+}
