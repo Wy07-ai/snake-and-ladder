@@ -65,8 +65,9 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
     isMovingRef.current = true
     setIsMoving(true)
     setIsRolling(true)
-    const dice = rollDice()
-    const isBonusRoll = extraRollAvailable
+    const previousRoll = diceStreaksRef.current[currentPlayer.id]
+    const isThirdConsecutiveSix = previousRoll?.dice === 6 && previousRoll.streak >= 2
+    const dice = rollDice(Math.random, isThirdConsecutiveSix ? 5 : 6)
     const startPosition = playerPosition
     let position = playerPosition
     setExtraRollAvailable(false)
@@ -82,7 +83,6 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
       setIsRolling(false)
       setRollingValue(null)
       setLastRoll(dice)
-      const previousRoll = diceStreaksRef.current[currentPlayer.id]
       const streak = previousRoll?.dice === dice ? previousRoll.streak + 1 : 1
       diceStreaksRef.current[currentPlayer.id] = { dice, streak }
       if (streak > 1) {
@@ -134,7 +134,7 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
         setExtraRollAvailable(false)
         onSfx('win')
         onGameEvent('GAME_OVER', currentPlayer)
-      } else if (hasBonusRoll(dice, isBonusRoll)) {
+      } else if (hasBonusRoll(dice)) {
         setExtraRollAvailable(true)
       } else {
         setExtraRollAvailable(false)
@@ -147,7 +147,7 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
       setRollingValue(null)
       setSlidingPlayerId(null)
     }
-  }, [board, currentPlayer, extraRollAvailable, isGameOver, onGameEvent, onSfx, playerCount, playerPosition, playerPositions, players])
+  }, [board, currentPlayer, isGameOver, onGameEvent, onSfx, playerCount, playerPosition, playerPositions, players])
 
   useEffect(() => {
     if (currentPlayer.type !== 'bot' || isMoving || isGameOver) return undefined

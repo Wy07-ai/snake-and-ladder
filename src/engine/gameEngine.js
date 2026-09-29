@@ -56,12 +56,12 @@ export function createStartPositions(players = GAME_PLAYERS) {
   return Object.fromEntries(players.map((player) => [player.id, 1]))
 }
 
-export function rollDice(random = Math.random) {
-  return Math.floor(random() * 6) + 1
+export function rollDice(random = Math.random, sides = 6) {
+  return Math.floor(random() * sides) + 1
 }
 
-export function hasBonusRoll(dice, alreadyUsed = false) {
-  return dice === 6 && !alreadyUsed
+export function hasBonusRoll(dice) {
+  return dice === 6
 }
 
 export function getNextPlayerIndex(currentIndex, playerCount = GAME_PLAYERS.length) {
@@ -84,7 +84,8 @@ export function getBotThinkDelay(difficulty = 'medium', random = Math.random) {
 }
 
 export function movePlayer(position, steps) {
-  return Math.min(position + steps, 100)
+  const destination = position + steps
+  return destination <= 100 ? destination : position
 }
 
 export function getMovementSteps(position, steps) {
