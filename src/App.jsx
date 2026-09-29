@@ -4,7 +4,16 @@ import GameControls from './components/controls/GameControls.jsx'
 import { useGame } from './hooks/useGame.js'
 
 function App() {
-  const { lastRoll, playerPosition, resetGame, roll } = useGame()
+  const {
+    extraRollAvailable,
+    isGameOver,
+    isMoving,
+    lastMove,
+    lastRoll,
+    playerPosition,
+    resetGame,
+    roll,
+  } = useGame()
 
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-7xl gap-6 px-4 py-6 md:px-8 md:py-10">
@@ -21,7 +30,15 @@ function App() {
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section className="grid gap-4" aria-label="Area permainan">
           <GameBoard playerPosition={playerPosition} />
-          <GameControls lastRoll={lastRoll} onRoll={roll} onReset={resetGame} />
+          <GameControls
+            extraRollAvailable={extraRollAvailable}
+            isGameOver={isGameOver}
+            isMoving={isMoving}
+            lastMove={lastMove}
+            lastRoll={lastRoll}
+            onRoll={roll}
+            onReset={resetGame}
+          />
         </section>
         <ChatPanel />
       </div>
