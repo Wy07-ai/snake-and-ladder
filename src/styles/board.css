@@ -30,6 +30,32 @@
   --snake-tongue: #e03131;
   --snake-glow: none;
 
+  /* Variabel tambahan (semua tema boleh menimpa). Aksen dipakai hiasan SVG,
+     overlay = lapisan partikel/tekstur di atas kotak, di bawah ular/tangga. */
+  --accent-1: #075e54;
+  --accent-2: #25d366;
+  --cell-pattern: none;
+  --cell-pattern-size: auto;
+  --overlay-image: none;
+  --overlay-size: auto;
+  --overlay-opacity: 0.7;
+  --overlay-anim: none;
+  --overlay-blend: normal;
+  --snake-edge: transparent;
+  --snake-edge-width: 0;
+  --snake-width: 2;
+  --snake-belly-width: 0.7;
+  --snake-belly-dash: 1.2 1.7;
+  --snake-cap: round;
+  --snake-head: var(--snake-body);
+  --ladder-rail-width: 0.7;
+  --ladder-rung-width: 0.5;
+  --ladder-detail: transparent;
+  --ladder-detail-width: 0.3;
+  --ladder-detail-dash: 0.6 1.4;
+  --rung-detail: transparent;
+  --rung-detail-dash: 0.5 1;
+
   /* Container: ukuran teks, lencana, dan bendera kotak mengikuti lebar papan (cqw). */
   container-type: inline-size;
   overflow: hidden;
@@ -38,6 +64,24 @@
   background: var(--board-bg);
   box-shadow: var(--board-shadow);
   font-family: var(--board-font);
+  position: relative;
+  transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease, color 0.5s ease;
+}
+
+/* Lapisan tekstur/partikel tema: di atas kotak (z auto) dan di bawah ular/tangga (z-10)
+   serta angka kotak (z-15). Tidak menerima klik. */
+.board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background-image: var(--overlay-image);
+  background-size: var(--overlay-size);
+  opacity: var(--overlay-opacity);
+  mix-blend-mode: var(--overlay-blend);
+  animation: var(--overlay-anim);
+  transition: opacity 0.5s ease;
 }
 
 .board[data-board-theme='cyberpunk'] {
@@ -93,6 +137,360 @@
   --snake-tongue: #e03131;
 }
 
+/* ---- Tema tambahan ---------------------------------------------------------
+   Tiap tema mengatur: palet papan/kotak, pola kotak (--cell-pattern), lapisan partikel
+   (--overlay-*), gaya ular (--snake-*), gaya tangga (--ladder-*), dan aksen hiasan
+   (--accent-1/2). Bentuk hiasan SVG ada di Connections.jsx. */
+
+/* China / Orient Express: merah & emas, kisi jendela, lentera. Ular = naga sutra,
+   tangga = perancah bambu berbuku dengan ikatan tali merah. */
+.board[data-board-theme='china'] {
+  --board-frame: #b3121a;
+  --board-frame-width: 5px;
+  --board-bg: #5a0d10;
+  --board-shadow: 0 0 0 1px #f2b705, 0 3px 10px rgba(122, 10, 16, 0.5);
+  --board-font: 'Georgia', 'Songti SC', serif;
+
+  --cell-a: #f8e3b0;
+  --cell-b: #e9c46a;
+  --cell-ladder: #d9e6a8;
+  --cell-snake: #f4a08a;
+  --cell-ink: #5a0d10;
+  --cell-line: rgba(179, 18, 26, 0.35);
+  --cell-text-shadow: 0 0 3px #f8e3b0, 0 0 3px #f8e3b0;
+  --cell-pattern: linear-gradient(45deg, transparent 47%, rgba(179, 18, 26, 0.12) 48% 52%, transparent 53%), linear-gradient(-45deg, transparent 47%, rgba(179, 18, 26, 0.12) 48% 52%, transparent 53%);
+  --cell-pattern-size: 50% 50%;
+
+  --badge-ladder: #3f7d20;
+  --badge-snake: #b3121a;
+  --badge-ink: #ffe9a8;
+
+  --accent-1: #d7191f;
+  --accent-2: #f2b705;
+
+  --overlay-image: radial-gradient(circle at 50% 50%, rgba(242, 183, 5, 0.55) 0 1.2px, transparent 1.6px);
+  --overlay-size: 20px 20px;
+  --overlay-opacity: 0.35;
+
+  --ladder-rail: #5f8f2a;
+  --ladder-rung: #8bb33a;
+  --ladder-rail-width: 0.95;
+  --ladder-rung-width: 0.6;
+  --ladder-detail: #2f4a12;
+  --ladder-detail-width: 1;
+  --ladder-detail-dash: 0.22 3.4;
+  --rung-detail: #d7191f;
+  --rung-detail-dash: 0.6 8;
+
+  --snake-body: #c1121f;
+  --snake-edge: #f2b705;
+  --snake-edge-width: 0.55;
+  --snake-width: 2;
+  --snake-belly: #ffd54a;
+  --snake-belly-dash: 0.6 1.1;
+  --snake-eye: #ffe9a8;
+  --snake-tongue: #f2b705;
+  --snake-glow: drop-shadow(0 0 0.5px #f2b705);
+}
+
+/* Christmas: salju turun, hijau-merah meriah. Ular = es runcing beku,
+   tangga = tangga kereta salju berlilit tali garland dengan strip permen. */
+.board[data-board-theme='christmas'] {
+  --board-frame: #b3202a;
+  --board-frame-width: 5px;
+  --board-bg: #0f5132;
+  --board-shadow: 0 0 0 1px #ffffff, 0 3px 10px rgba(15, 81, 50, 0.5);
+  --board-font: 'Trebuchet MS', 'Segoe UI', sans-serif;
+
+  --cell-a: #f4fbff;
+  --cell-b: #d3ecdd;
+  --cell-ladder: #c9f0d2;
+  --cell-snake: #d6ecff;
+  --cell-ink: #0f3d24;
+  --cell-line: rgba(179, 32, 42, 0.22);
+  --cell-text-shadow: 0 0 3px #ffffff, 0 0 3px #ffffff;
+
+  --badge-ladder: #1b7f43;
+  --badge-snake: #2a7fc0;
+  --badge-ink: #ffffff;
+
+  --accent-1: #c62828;
+  --accent-2: #ffffff;
+
+  --overlay-image: radial-gradient(circle, #ffffff 0 1.6px, transparent 2.2px), radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 1px, transparent 1.6px);
+  --overlay-size: 60px 60px, 40px 40px;
+  --overlay-opacity: 0.85;
+  --overlay-anim: overlay-fall 7s linear infinite;
+
+  --ladder-rail: #ffffff;
+  --ladder-rung: #7a4b1f;
+  --ladder-rail-width: 1;
+  --ladder-rung-width: 0.55;
+  --ladder-detail: #d32f2f;
+  --ladder-detail-width: 1;
+  --ladder-detail-dash: 1 1;
+  --rung-detail: #2e9b52;
+  --rung-detail-dash: 0.7 0.6;
+  --ladder-glow: drop-shadow(0 0 0.5px #5a1a1a);
+
+  --snake-body: #7cc7f2;
+  --snake-edge: #ffffff;
+  --snake-edge-width: 0.5;
+  --snake-width: 1.9;
+  --snake-belly: #ffffff;
+  --snake-belly-dash: 0.4 1.3;
+  --snake-eye: #12385a;
+  --snake-tongue: #d32f2f;
+  --snake-glow: drop-shadow(0 0 1px #7cc7f2);
+}
+
+/* Halloween: malam ungu, oranye labu, jaring laba-laba. Ular = sulur hantu/tengkorak,
+   tangga = tali jaring dengan paku besi. */
+.board[data-board-theme='halloween'] {
+  --board-frame: #ff7a18;
+  --board-frame-width: 5px;
+  --board-bg: #1a0b2e;
+  --board-shadow: 0 0 16px rgba(255, 122, 24, 0.45), 0 0 4px rgba(170, 110, 255, 0.6);
+  --board-font: 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+
+  --cell-a: #2a1245;
+  --cell-b: #3a1a5c;
+  --cell-ladder: #3b2a12;
+  --cell-snake: #1f3a1f;
+  --cell-ink: #ffb266;
+  --cell-line: rgba(255, 122, 24, 0.25);
+  --cell-text-shadow: 0 0 3px #1a0b2e, 0 0 3px #1a0b2e, 0 0 6px rgba(255, 122, 24, 0.35);
+  --cell-pattern: radial-gradient(circle at 100% 100%, transparent 0 55%, rgba(255, 255, 255, 0.10) 56% 58%, transparent 59%), radial-gradient(circle at 100% 100%, transparent 0 30%, rgba(255, 255, 255, 0.10) 31% 33%, transparent 34%);
+  --cell-pattern-size: 100% 100%;
+
+  --badge-ladder: #ff7a18;
+  --badge-snake: #7bd66b;
+  --badge-ink: #1a0b2e;
+
+  --accent-1: #ff7a18;
+  --accent-2: #d8c7ff;
+
+  --overlay-image: radial-gradient(circle, rgba(216, 199, 255, 0.55) 0 1.2px, transparent 2px);
+  --overlay-size: 70px 70px;
+  --overlay-opacity: 0.4;
+  --overlay-anim: overlay-drift 9s ease-in-out infinite alternate;
+
+  --ladder-rail: #d8d2e6;
+  --ladder-rung: #b9b0cf;
+  --ladder-rail-width: 0.55;
+  --ladder-rung-width: 0.32;
+  --ladder-detail: #ff7a18;
+  --ladder-detail-width: 0.3;
+  --ladder-detail-dash: 0.5 1.6;
+  --rung-detail: #ffffff;
+  --rung-detail-dash: 0.3 0.5;
+  --ladder-glow: drop-shadow(0 0 0.8px rgba(216, 199, 255, 0.9));
+
+  --snake-body: #6fd35f;
+  --snake-edge: rgba(111, 211, 95, 0.35);
+  --snake-edge-width: 1.2;
+  --snake-width: 1.4;
+  --snake-belly: #e9ffe4;
+  --snake-belly-width: 0.5;
+  --snake-belly-dash: 0.5 1.9;
+  --snake-head: #f3efe6;
+  --snake-eye: #ff7a18;
+  --snake-tongue: #ff7a18;
+  --snake-glow: drop-shadow(0 0 1.2px #6fd35f);
+}
+
+/* Middle East / Desert Oasis: pasir emas, mozaik toska, bayangan bukit pasir.
+   Ular = ular gurun berpola berlian, tangga = tangga palem dengan tumpukan karpet. */
+.board[data-board-theme='desert'] {
+  --board-frame: #0f8b8d;
+  --board-frame-width: 5px;
+  --board-bg: #e9c77b;
+  --board-shadow: 0 0 0 1px #b8892b, 0 3px 10px rgba(120, 80, 20, 0.4);
+  --board-font: 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+
+  --cell-a: #f6e2a8;
+  --cell-b: #e8c877;
+  --cell-ladder: #bfe8de;
+  --cell-snake: #f2b990;
+  --cell-ink: #5a3a10;
+  --cell-line: rgba(15, 139, 141, 0.35);
+  --cell-text-shadow: 0 0 3px #f6e2a8, 0 0 3px #f6e2a8;
+  --cell-pattern: conic-gradient(from 45deg at 50% 50%, rgba(15, 139, 141, 0.16) 0 25%, transparent 0 50%, rgba(15, 139, 141, 0.16) 0 75%, transparent 0);
+  --cell-pattern-size: 50% 50%;
+
+  --badge-ladder: #0f8b8d;
+  --badge-snake: #b4491f;
+  --badge-ink: #fff5d6;
+
+  --accent-1: #0f8b8d;
+  --accent-2: #f2c14e;
+
+  /* Bayangan bukit pasir: gradasi diagonal lembut */
+  --overlay-image: linear-gradient(115deg, transparent 0 30%, rgba(120, 70, 10, 0.16) 45%, transparent 62%), linear-gradient(115deg, transparent 0 60%, rgba(120, 70, 10, 0.12) 75%, transparent 90%);
+  --overlay-size: 100% 100%;
+  --overlay-opacity: 0.9;
+  --overlay-blend: multiply;
+
+  --ladder-rail: #8a5a22;
+  --ladder-rung: #c0392b;
+  --ladder-rail-width: 0.8;
+  --ladder-rung-width: 1.1;
+  --ladder-detail: #f2c14e;
+  --ladder-detail-width: 0.3;
+  --ladder-detail-dash: 0.5 1.1;
+  --rung-detail: #f2c14e;
+  --rung-detail-dash: 0.6 0.6;
+
+  --snake-body: #b9832f;
+  --snake-edge: #5a3a10;
+  --snake-edge-width: 0.4;
+  --snake-width: 1.8;
+  --snake-belly: #5a3a10;
+  --snake-belly-width: 0.9;
+  --snake-belly-dash: 0.7 1.8;
+  --snake-eye: #ffe27a;
+  --snake-tongue: #c0392b;
+  --snake-cap: butt;
+  --snake-head: #a06f22;
+}
+
+/* Nobility / Royal Victorian: beludru biru, lis daun emas, kotak marmer.
+   Ular = pita merah kerajaan, tangga = tangga spiral emas dengan pagar berukir. */
+.board[data-board-theme='royal'] {
+  --board-frame: #d4af37;
+  --board-frame-width: 6px;
+  --board-bg: #0b1f5c;
+  --board-shadow: 0 0 0 2px #7a5c10, 0 4px 14px rgba(11, 31, 92, 0.55);
+  --board-font: 'Didot', 'Bodoni MT', Georgia, serif;
+
+  --cell-a: #f3f0ea;
+  --cell-b: #cfd6e8;
+  --cell-ladder: #f3e6b5;
+  --cell-snake: #f2c9cf;
+  --cell-ink: #0b1f5c;
+  --cell-line: rgba(212, 175, 55, 0.5);
+  --cell-text-shadow: 0 0 3px #f3f0ea, 0 0 3px #f3f0ea;
+  /* Urat marmer */
+  --cell-pattern: linear-gradient(120deg, transparent 40%, rgba(11, 31, 92, 0.08) 41% 42%, transparent 43%), linear-gradient(35deg, transparent 60%, rgba(11, 31, 92, 0.07) 61% 62%, transparent 63%);
+  --cell-pattern-size: 100% 100%;
+
+  --badge-ladder: #b8901f;
+  --badge-snake: #9b111e;
+  --badge-ink: #fffbea;
+
+  --accent-1: #d4af37;
+  --accent-2: #fff3c4;
+
+  --overlay-image: radial-gradient(circle at 0 0, rgba(212, 175, 55, 0.35) 0 3px, transparent 4px), radial-gradient(circle at 100% 100%, rgba(212, 175, 55, 0.35) 0 3px, transparent 4px);
+  --overlay-size: 100% 100%, 100% 100%;
+  --overlay-opacity: 0.6;
+
+  --ladder-rail: #d4af37;
+  --ladder-rung: #b8901f;
+  --ladder-rail-width: 1;
+  --ladder-rung-width: 0.55;
+  --ladder-detail: #fff3c4;
+  --ladder-detail-width: 0.35;
+  --ladder-detail-dash: 0.3 1.2;
+  --rung-detail: #fff3c4;
+  --rung-detail-dash: 0.3 0.9;
+  --ladder-glow: drop-shadow(0 0 0.5px #5a4208);
+
+  --snake-body: #b3122a;
+  --snake-edge: #d4af37;
+  --snake-edge-width: 0.7;
+  --snake-width: 1.7;
+  --snake-belly: #ff8a9c;
+  --snake-belly-width: 0.3;
+  --snake-belly-dash: 4 1.4;
+  --snake-head: #b3122a;
+  --snake-eye: #d4af37;
+  --snake-tongue: #d4af37;
+  --snake-cap: butt;
+}
+
+/* Hell / Infernal Abyss: lava merah, obsidian hitam, percikan api naik.
+   Ular = sungai api berantai lava, tangga = tulang belakang di pilar obsidian. */
+.board[data-board-theme='hell'] {
+  --board-frame: #ff3b00;
+  --board-frame-width: 5px;
+  --board-bg: #0a0505;
+  --board-shadow: 0 0 20px rgba(255, 59, 0, 0.6), 0 0 5px rgba(255, 200, 0, 0.6);
+  --board-font: 'Impact', 'Arial Black', sans-serif;
+
+  --cell-a: #140a0a;
+  --cell-b: #211010;
+  --cell-ladder: #262018;
+  --cell-snake: #4a0e05;
+  --cell-ink: #ffb347;
+  --cell-line: rgba(255, 59, 0, 0.3);
+  --cell-text-shadow: 0 0 3px #0a0505, 0 0 3px #0a0505, 0 0 7px rgba(255, 90, 0, 0.5);
+  /* Retakan lava */
+  --cell-pattern: linear-gradient(115deg, transparent 46%, rgba(255, 90, 0, 0.30) 48% 50%, transparent 52%), linear-gradient(30deg, transparent 64%, rgba(255, 60, 0, 0.22) 66% 67%, transparent 69%);
+  --cell-pattern-size: 100% 100%;
+
+  --badge-ladder: #e8dcc0;
+  --badge-snake: #ff3b00;
+  --badge-ink: #0a0505;
+
+  --accent-1: #ff3b00;
+  --accent-2: #ffd23f;
+
+  --overlay-image: radial-gradient(circle, #ffd23f 0 1.4px, transparent 2px), radial-gradient(circle, #ff6a00 0 1px, transparent 1.6px);
+  --overlay-size: 80px 80px, 50px 50px;
+  --overlay-opacity: 0.8;
+  --overlay-anim: overlay-rise 6s linear infinite;
+
+  --ladder-rail: #e8dcc0;
+  --ladder-rung: #cbbf9f;
+  --ladder-rail-width: 0.9;
+  --ladder-rung-width: 0.6;
+  --ladder-detail: #1a0d0d;
+  --ladder-detail-width: 1;
+  --ladder-detail-dash: 0.18 1.5;
+  --rung-detail: #1a0d0d;
+  --rung-detail-dash: 0.2 0.9;
+  --ladder-glow: drop-shadow(0 0 1px rgba(255, 90, 0, 0.9));
+
+  --snake-body: #ff4500;
+  --snake-edge: #ffd23f;
+  --snake-edge-width: 0.5;
+  --snake-width: 1.9;
+  --snake-belly: #1a0d0d;
+  --snake-belly-width: 1.1;
+  --snake-belly-dash: 0.9 1.1;
+  --snake-head: #ff4500;
+  --snake-eye: #ffe45c;
+  --snake-tongue: #ffd23f;
+  --snake-glow: drop-shadow(0 0 1.6px #ff4500);
+}
+
+@keyframes overlay-fall {
+  to { background-position: 0 120px, 0 120px; }
+}
+
+@keyframes overlay-rise {
+  to { background-position: 0 -240px, 0 -240px; }
+}
+
+@keyframes overlay-drift {
+  to { background-position: 35px 0, 35px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board::after,
+  .board-conns > g,
+  .board-orn {
+    animation: none;
+  }
+
+  .board,
+  .board-cell,
+  .board-conns * {
+    transition: none;
+  }
+}
+
 .board-cell {
   position: relative;
   display: flex;
@@ -100,8 +498,11 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--cell-line);
-  background: var(--cell-a);
+  background-color: var(--cell-a);
+  background-image: var(--cell-pattern);
+  background-size: var(--cell-pattern-size);
   color: var(--cell-ink);
+  transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease;
   font-size: clamp(0.7rem, 2.4cqw, 1.5rem);
   font-weight: 600;
 }
@@ -115,16 +516,16 @@
 }
 
 .board-cell[data-tone='b'] {
-  background: var(--cell-b);
+  background-color: var(--cell-b);
 }
 
 /* Diletakkan setelah data-tone agar warna kotak ular/tangga menang. */
 .board-cell[data-feature='ladder'] {
-  background: var(--cell-ladder);
+  background-color: var(--cell-ladder);
 }
 
 .board-cell[data-feature='snake'] {
-  background: var(--cell-snake);
+  background-color: var(--cell-snake);
 }
 
 .board-badge {
@@ -155,7 +556,9 @@
   line-height: 1;
 }
 
-/* Ular & tangga (SVG di atas papan). */
+/* Ular & tangga (SVG di atas papan). Warna, tebal, dan pola garis mengikuti variabel
+   tema, jadi berpindah tema cukup menganimasikan stroke/fill lewat transition. Bentuk
+   hiasan (kepala, ujung tangga) digambar Connections.jsx sesuai tema. */
 .board-conn--ladder {
   filter: var(--ladder-glow);
 }
@@ -164,31 +567,71 @@
   filter: var(--snake-glow);
 }
 
+.board-conns > g,
+.board-orn {
+  animation: board-conn-in 0.45s ease both;
+}
+
+.board-ladder-rail,
+.board-ladder-rung,
+.board-ladder-rail-detail,
+.board-ladder-rung-detail,
+.board-snake-body,
+.board-snake-edge,
+.board-snake-belly,
+.board-snake-body-fill,
+.board-snake-eye,
+.board-snake-tongue {
+  transition: stroke 0.5s ease, fill 0.5s ease, stroke-width 0.5s ease;
+}
+
 .board-ladder-rail {
   stroke: var(--ladder-rail);
-  stroke-width: 0.7;
+  stroke-width: var(--ladder-rail-width);
   stroke-linecap: round;
 }
 
 .board-ladder-rung {
   stroke: var(--ladder-rung);
-  stroke-width: 0.5;
+  stroke-width: var(--ladder-rung-width);
   stroke-linecap: round;
+}
+
+/* Lapisan detail di atas rel/anak tangga: ruas bambu, garis permen, tulang belakang, dst. */
+.board-ladder-rail-detail {
+  stroke: var(--ladder-detail);
+  stroke-width: var(--ladder-detail-width);
+  stroke-dasharray: var(--ladder-detail-dash);
+  stroke-linecap: butt;
+}
+
+.board-ladder-rung-detail {
+  stroke: var(--rung-detail);
+  stroke-width: 0.25;
+  stroke-dasharray: var(--rung-detail-dash);
+}
+
+.board-snake-edge {
+  fill: none;
+  stroke: var(--snake-edge);
+  stroke-width: calc(var(--snake-width) + var(--snake-edge-width));
+  stroke-linecap: var(--snake-cap);
 }
 
 .board-snake-body {
   stroke: var(--snake-body);
-  stroke-width: 2;
+  stroke-width: var(--snake-width);
+  stroke-linecap: var(--snake-cap);
 }
 
 .board-snake-belly {
   stroke: var(--snake-belly);
-  stroke-width: 0.7;
-  stroke-dasharray: 1.2 1.7;
+  stroke-width: var(--snake-belly-width);
+  stroke-dasharray: var(--snake-belly-dash);
 }
 
 .board-snake-body-fill {
-  fill: var(--snake-body);
+  fill: var(--snake-head);
 }
 
 .board-snake-eye {
@@ -202,6 +645,16 @@
   fill: none;
 }
 
+.board-orn-a { fill: var(--accent-1); stroke: var(--accent-2); stroke-width: 0.25; }
+.board-orn-b { fill: var(--accent-2); }
+.board-orn-line { fill: none; stroke: var(--accent-2); stroke-width: 0.35; stroke-linecap: round; }
+.board-orn-dark { fill: var(--cell-ink); }
+
+@keyframes board-conn-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Pratinjau kecil di pemilih tema: hanya pola warna, tanpa angka. */
 .board--compact {
   --board-frame-width: 2px;
@@ -211,6 +664,12 @@
 
 .board--compact .board-cell {
   border-width: 0;
+}
+
+.board--compact::after,
+.board--compact .board-conns > g,
+.board--compact .board-orn {
+  animation: none;
 }
 
 .board--compact .board-cell > * {

@@ -39,7 +39,7 @@ function BoardView({ theme = 'classic', board: boardLayout = DEFAULT_BOARD, comp
             <BoardCell key={square} square={square} feature={features.get(square)} />
           ))}
         </div>
-        <Connections board={boardLayout} />
+        <Connections board={boardLayout} theme={theme} />
         {children}
       </div>
     </div>
