@@ -2,7 +2,9 @@
 // jadi tidak ada file audio yang harus dimuat atau dilisensikan.
 //
 // - SFX: playSfx('diceRoll' | 'step' | 'ladder' | 'snake' | 'dialog' | 'notification' | 'win')
-// - BGM: startBgm() / stopBgm(), musik santai yang berulang otomatis
+// - BGM: startBgm(themeId) / stopBgm(), musik yang berulang otomatis. Tiap tema papan
+//   punya preset sendiri (data/bgmPresets.js); setBgmTheme(themeId) melakukan crossfade
+//   mulus ke preset tema baru tanpa memutus musik yang sedang berjalan.
 // - Volume: setVolumes({ bgm, sfx }) menerima nilai 0-1 dari getEffectiveVolume()
 //
 // Browser memblokir suara sebelum ada interaksi pengguna, sehingga konteks
@@ -16,6 +18,7 @@ import {
   DICE_ROLL_MS,
   DICE_SHAKE_HITS,
 } from '../engine/gameEngine.js'
+import { BGM_PRESETS, DEFAULT_BGM_PRESET, getBgmPreset } from '../data/bgmPresets.js'
 
 const AudioContextClass =
   typeof window !== 'undefined' ? window.AudioContext ?? window.webkitAudioContext : undefined
@@ -25,6 +28,8 @@ let sfxBus = null
 let bgmBus = null
 let noiseBuffer = null
 let bgmSession = null
+let bgmPresetId = DEFAULT_BGM_PRESET
+const fadingSessions = new Set()
 const volumes = { bgm: 0, sfx: 0 }
 
 const midiToFreq = (midi) => 440 * 2 ** ((midi - 69) / 12)
@@ -277,49 +282,58 @@ export function playSfx(name, options = {}) {
 
 // ---------------------------------------------------------------- background music
 
-// Musik santai: progresi C - Am - F - G, 100 BPM, sedikit swing.
-// Lapisan: pad lembut, bass memantul, melodi ala marimba, dan shaker tipis.
-const EIGHTH = 60 / 100 / 2
+// Musik dibangkitkan dari preset (data/bgmPresets.js): progresi 4 akor yang berulang
+// tiap 8 bar, lapisan pad, bass, melodi, dan perkusi tipis. Tiap preset punya tempo,
+// swing, bentuk gelombang, dan warna filter sendiri, jadi tiap tema terdengar berbeda.
 const STEPS_PER_BAR = 8
 const BAR_COUNT = 8
 const TOTAL_STEPS = STEPS_PER_BAR * BAR_COUNT
 const LOOKAHEAD = 1.2
+const CROSSFADE_SECONDS = 2.2
+const FADE_IN_SECONDS = 1.5
+const FADE_OUT_SECONDS = 0.4
 
-const CHORDS = [
-  { bass: 48, pad: [60, 64, 67] }, // C
-  { bass: 45, pad: [60, 64, 69] }, // Am
-  { bass: 41, pad: [60, 65, 69] }, // F
-  { bass: 43, pad: [59, 62, 67] }, // G
-]
+// Perkusi tipis per gaya; `accent` true pada ketukan lemah (langkah ganjil).
+function schedulePercussion(dest, preset, { beat, t, eighth }) {
+  const level = preset.gains.perc
+  const accent = beat % 2 === 1
+  switch (preset.perc) {
+    case 'shaker':
+      noise(dest, { start: t, duration: 0.05, gain: accent ? level : level * 0.43, filter: 'highpass', frequency: 6500 })
+      break
+    case 'tick':
+      if (beat % 2 === 0 || beat === 7) {
+        noise(dest, { start: t, duration: 0.035, gain: beat % 4 === 0 ? level * 1.6 : level, filter: 'bandpass', frequency: beat % 4 === 0 ? 900 : 3200, q: 3 })
+      }
+      break
+    case 'bell':
+      if (beat === 0 || beat === 4) {
+        const freq = midiToFreq(beat === 0 ? 84 : 79)
+        tone(dest, { freq, type: 'sine', start: t, duration: eighth * 6, gain: level })
+        tone(dest, { freq: freq * 2.76, type: 'sine', start: t, duration: eighth * 2, gain: level * 0.3 })
+      }
+      break
+    default:
+      break
+  }
+}
 
-// Satu larik per bar, delapan langkah (per not seperdelapan); null = diam.
-const MELODY_A = [
-  [79, null, 76, null, 72, 76, 79, null],
-  [76, null, 72, null, 69, 72, 76, null],
-  [77, null, 72, null, 69, 72, 77, null],
-  [74, null, 71, null, 67, 71, 74, 79],
-]
-const MELODY_B = [
-  [79, null, null, 76, 72, null, 76, 79],
-  [81, null, 79, null, 76, null, null, 72],
-  [77, null, 81, null, 77, null, 72, null],
-  [79, 79, 74, null, 71, null, 74, null],
-]
-
-function scheduleBgmStep(stepIndex, time, dest) {
+function scheduleBgmStep(preset, stepIndex, time, dest) {
+  const eighth = 60 / preset.bpm / 2
   const bar = Math.floor(stepIndex / STEPS_PER_BAR) % BAR_COUNT
   const beat = stepIndex % STEPS_PER_BAR
-  const chord = CHORDS[bar % 4]
-  const t = time + (beat % 2 === 1 ? EIGHTH * 0.12 : 0)
+  const chord = preset.chords[bar % 4]
+  const t = time + (beat % 2 === 1 ? eighth * preset.swing : 0)
+  const { voices, gains } = preset
 
   if (beat === 0) {
     chord.pad.forEach((midi) => {
       tone(dest, {
         freq: midiToFreq(midi),
-        type: 'triangle',
+        type: voices.pad,
         start: time,
-        duration: EIGHTH * STEPS_PER_BAR * 0.98,
-        gain: 0.035,
+        duration: eighth * STEPS_PER_BAR * 0.98,
+        gain: gains.pad,
         attack: 0.25,
         sustain: true,
       })
@@ -328,60 +342,104 @@ function scheduleBgmStep(stepIndex, time, dest) {
 
   if (beat === 0 || beat === 4) {
     const midi = beat === 0 ? chord.bass : chord.bass + 7
-    tone(dest, { freq: midiToFreq(midi), type: 'triangle', start: t, duration: EIGHTH * 3.4, gain: 0.15 })
+    tone(dest, { freq: midiToFreq(midi), type: voices.bass, start: t, duration: eighth * 3.4, gain: gains.bass })
   }
 
-  const phrase = (bar < 4 ? MELODY_A : MELODY_B)[bar % 4][beat]
-  if (phrase) {
-    tone(dest, { freq: midiToFreq(phrase), type: 'sine', start: t, duration: 0.5, gain: 0.1 })
-    tone(dest, { freq: midiToFreq(phrase + 12), type: 'sine', start: t, duration: 0.16, gain: 0.025 })
+  const note = (bar < 4 ? preset.melodyA : preset.melodyB)[bar % 4][beat]
+  if (note) {
+    tone(dest, { freq: midiToFreq(note), type: voices.lead, start: t, duration: 0.5, gain: gains.lead })
+    tone(dest, { freq: midiToFreq(note + 12), type: voices.lead2, start: t, duration: 0.16, gain: gains.lead * 0.25 })
   }
 
-  noise(dest, {
-    start: t,
-    duration: 0.05,
-    gain: beat % 2 === 1 ? 0.03 : 0.013,
-    filter: 'highpass',
-    frequency: 6500,
-  })
+  schedulePercussion(dest, preset, { beat, t, eighth })
 }
 
-export function startBgm() {
-  const context = ensureContext()
-  if (!context || bgmSession) return
+// Naik/turunkan gain sesi dari nilai saat ini (aman dipanggil di tengah fade lain).
+function rampSession(session, target, seconds) {
+  const now = ctx.currentTime
+  const param = session.gain.gain
+  param.cancelScheduledValues(now)
+  param.setValueAtTime(Math.max(param.value, 0.0001), now)
+  param.linearRampToValueAtTime(Math.max(target, 0.0001), now + seconds)
+}
 
-  const gain = context.createGain()
-  gain.gain.setValueAtTime(0.0001, context.currentTime)
-  gain.gain.linearRampToValueAtTime(1, context.currentTime + 1.5)
-  gain.connect(bgmBus)
+function createBgmSession(presetId, fadeSeconds) {
+  const preset = getBgmPreset(presetId)
+  const gain = ctx.createGain()
+  const filter = ctx.createBiquadFilter()
+  filter.type = 'lowpass'
+  filter.frequency.value = preset.filter
+  filter.Q.value = 0.5
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime)
+  gain.connect(filter)
+  filter.connect(bgmBus)
 
-  const session = { gain, timer: null, nextTime: context.currentTime + 0.15, step: 0 }
-  bgmSession = session
+  const eighth = 60 / preset.bpm / 2
+  const session = { id: presetId, preset, gain, filter, timer: null, nextTime: ctx.currentTime + 0.15, step: 0, live: true }
+  rampSession(session, 1, fadeSeconds)
 
   // Penjadwal lookahead: menjadwalkan nada sedikit di depan agar tempo stabil
-  // walaupun timer JavaScript tidak presisi.
+  // walaupun timer JavaScript tidak presisi. Sesi yang sedang memudar tetap
+  // dijadwalkan sampai dilepas (`live` false setelah fade-out selesai).
   const tick = () => {
-    if (bgmSession !== session) return
-    while (session.nextTime < context.currentTime + LOOKAHEAD) {
-      scheduleBgmStep(session.step, session.nextTime, session.gain)
-      session.nextTime += EIGHTH
+    if (!session.live) return
+    while (session.nextTime < ctx.currentTime + LOOKAHEAD) {
+      scheduleBgmStep(preset, session.step, session.nextTime, gain)
+      session.nextTime += eighth
       session.step = (session.step + 1) % TOTAL_STEPS
     }
     session.timer = window.setTimeout(tick, 150)
   }
   tick()
+  return session
+}
+
+function releaseSession(session, seconds) {
+  if (!session.live) return
+  rampSession(session, 0.0001, seconds)
+  fadingSessions.add(session)
+  // Nada yang sudah terjadwal ikut diredam lalu terputus bersama node gain.
+  window.setTimeout(() => {
+    session.live = false
+    window.clearTimeout(session.timer)
+    session.gain.disconnect()
+    session.filter.disconnect()
+    fadingSessions.delete(session)
+  }, seconds * 1000 + 300)
+}
+
+// Id tidak dikenal jatuh ke preset default.
+const resolvePresetId = (id) => (Object.hasOwn(BGM_PRESETS, id) ? id : DEFAULT_BGM_PRESET)
+
+// Preset musik yang sedang dipilih (mengikuti tema papan).
+export function getBgmTheme() {
+  return bgmPresetId
+}
+
+export function startBgm(presetId = bgmPresetId) {
+  bgmPresetId = resolvePresetId(presetId)
+  const context = ensureContext()
+  if (!context || bgmSession) return
+  bgmSession = createBgmSession(bgmPresetId, FADE_IN_SECONDS)
+}
+
+// Ganti tema musik. Jika BGM sedang berbunyi, sesi lama memudar keluar sambil sesi
+// baru memudar masuk (crossfade); jika tidak (mute / belum unlock), pilihan hanya
+// diingat dan dipakai saat startBgm berikutnya. Memilih preset yang sama tidak berbuat apa-apa.
+export function setBgmTheme(presetId) {
+  const next = resolvePresetId(presetId)
+  if (next === bgmPresetId) return
+  bgmPresetId = next
+  if (!ctx || !bgmSession) return
+
+  const previous = bgmSession
+  bgmSession = createBgmSession(next, CROSSFADE_SECONDS)
+  releaseSession(previous, CROSSFADE_SECONDS)
 }
 
 export function stopBgm() {
-  const session = bgmSession
-  if (!session || !ctx) return
+  if (!ctx) return
+  const sessions = [bgmSession, ...fadingSessions].filter(Boolean)
   bgmSession = null
-  window.clearTimeout(session.timer)
-
-  // Fade out; nada yang sudah terjadwal ikut redam lalu terputus.
-  const now = ctx.currentTime
-  session.gain.gain.cancelScheduledValues(now)
-  session.gain.gain.setValueAtTime(Math.max(session.gain.gain.value, 0.0001), now)
-  session.gain.gain.linearRampToValueAtTime(0.0001, now + 0.4)
-  window.setTimeout(() => session.gain.disconnect(), 700)
+  sessions.forEach((session) => releaseSession(session, FADE_OUT_SECONDS))
 }

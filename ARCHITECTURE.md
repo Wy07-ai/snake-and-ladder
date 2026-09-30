@@ -46,6 +46,8 @@ A board is `{ ladders: [{ start, end }], snakes: [{ start, end }] }`. `data/boar
 
 `npm run verify:boards` checks every preset, runs the generator over 3,000 seeds, and confirms the validator rejects known-bad boards; it exits non-zero on any violation. To add a preset, append an entry to `BOARD_PRESETS` and run that script; no component changes are needed.
 
+`npm run verify:audio` checks the theme-to-BGM mapping and the audio engine's crossfade behavior against a mocked `AudioContext`; the full-page theme backdrop lives in `src/components/layout/ThemeBackdrop.jsx` and `src/styles/backdrop.css`.
+
 ## Audio
 
 `audioEngine.js` is a plain module (not React) built on the Web Audio API. Every sound is synthesized from oscillators and filtered noise, so there are no audio files. Browsers block audio until a user gesture, so `useAudioSync` creates and resumes the audio context on the first click, tap, or key press; until then every call is a safe no-op. The background music is a looping C-Am-F-G progression scheduled with a lookahead timer. It starts when the effective BGM volume is above zero, fades out when muted, and the whole context is suspended while the tab is hidden. `playSfx(name)` is silent when the effective SFX volume is zero. To add a sound, add a function to the `SFX` table and call `playSfx` with its name.

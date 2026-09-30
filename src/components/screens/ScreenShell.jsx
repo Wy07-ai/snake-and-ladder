@@ -3,7 +3,7 @@
 // `actions` (opsional) adalah tombol tambahan di samping tombol kembali, mis. "Mulai".
 function ScreenShell({ title, icon, onBack = () => {}, backLabel = '← Kembali ke lobby', actions = null, children }) {
   return (
-    <main className="grid min-h-screen place-items-center bg-gradient-to-b from-wa-primary via-[#0a7266] to-[#054a42] px-4 py-10">
+    <main className="grid min-h-screen place-items-center px-4 py-10">
       <section className="grid w-full max-w-2xl gap-6 rounded-2xl bg-wa-paper p-6 shadow-xl md:p-8" aria-labelledby="screen-title">
         <header className="flex items-center gap-3">
           <span className="text-3xl" aria-hidden="true">{icon}</span>

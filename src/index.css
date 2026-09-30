@@ -2,6 +2,7 @@
 @import './styles/theme.css';
 @import './styles/board.css';
 @import './styles/dialog.css';
+@import './styles/backdrop.css';
 @import './styles/layout.css';
 
 body {
