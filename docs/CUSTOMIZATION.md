@@ -44,12 +44,50 @@ Bentuk jalur ular dan tangga sama di semua tema; yang berbeda adalah tekstur (wa
   - Ular: `--snake-body`, `--snake-width`, `--snake-edge` + `--snake-edge-width` (bingkai), `--snake-belly` + `--snake-belly-width` + `--snake-belly-dash`, `--snake-head`, `--snake-eye`, `--snake-tongue`, `--snake-cap` (`round` atau `butt`; `butt` memberi kesan pita/ruas), `--snake-glow`.
 - `src/components/board/BoardView.jsx` meneruskan tema sebagai atribut `data-board-theme` pada papan dan sebagai prop `theme` ke `Connections`.
 - `src/components/board/Connections.jsx` menggambar ular dan tangga. Geometri dari `boardGeometry.js` tidak bergantung tema. Tiap rel/anak tangga digambar dua lapis (dasar + lapisan detail bergaris putus) dan tiap ular tiga lapis (bingkai, badan, perut). Hiasan yang bentuknya memang berbeda per tema ada di peta `SNAKE_HEADS` (kepala ular) dan `LADDER_FINIALS` (ujung atas rel), digambar dalam koordinat lokal (titik 0,0 = kepala/ujung rel, sumbu +x = arah hadap). Tema tanpa entri di peta tersebut (Classic, Cyberpunk, Jungle) tidak mendapat hiasan.
+- `src/styles/backdrop.css` dan `src/components/layout/ThemeBackdrop.jsx` mengatur latar halaman penuh per tema (lihat bagian di bawah).
 - `src/styles/theme.css` mengatur palet global antarmuka aplikasi melalui variabel `--wa-*` (tombol, panel, teks, dan latar). File ini bukan tempat utama untuk warna tiap tema papan.
 - `src/data/boardThemes.js` memasok identitas, label, emoji, deskripsi, dan tema default untuk pemilih tema. Sanitizer Settings membaca daftar ini, jadi ID tema yang tidak dikenal kembali ke Classic.
 
 ### Transisi saat ganti tema
 
 Warna kotak, bingkai, bayangan, serta stroke/fill ular dan tangga memakai CSS `transition` 0,5 detik, sehingga perpindahan warna berjalan halus. Hiasan kepala ular dan ujung tangga diberi `key` tema sehingga dirender ulang dan memudar masuk (0,45 detik). Semua animasi (partikel salju/api, fade hiasan, transisi warna) dimatikan pada pengguna dengan `prefers-reduced-motion`, dan pratinjau kecil (`.board--compact`) tidak beranimasi.
+
+### Latar halaman penuh per tema
+
+Selain papan, seluruh halaman (di luar papan) ikut berganti suasana. Latar dipasang sekali di `App.jsx` lewat `components/layout/ThemeBackdrop.jsx` dan diberi gaya di `src/styles/backdrop.css`.
+
+| Tema | Latar |
+| --- | --- |
+| Classic | Gradien hijau-teal modern, bukit lembut, dan siluet tangga. |
+| Cyberpunk | Langit ungu malam dengan cakrawala magenta/cyan dan siluet gedung berjendela neon. |
+| Jungle | Hijau rimba dengan berkas cahaya diagonal, kunang-kunang, dan siluet palem. |
+| China / Orient Express | Merah tua berkilau emas, lentera gantung, dan siluet pagoda. |
+| Christmas | Langit malam biru dengan salju turun, pinus, dan bukit bersalju. |
+| Halloween | Ungu gelap dengan bulan, kabut oranye, bintik melayang, dan siluet labu bermuka menyala, pohon gundul, serta kelelawar. |
+| Desert Oasis | Langit senja gurun dengan bintang, bukit pasir, dan siluet palem/menara. |
+| Royal Victorian | Biru beludru dengan debu emas dan tirai merah berhias emas di tepi atas. |
+| Infernal Abyss | Gelap-merah dengan cahaya lava dari bawah, bara api naik, dan siluet obsidian bercelah lava. |
+
+**Cara kerja.** `ThemeBackdrop` merender satu lapisan per tema (`.page-backdrop__layer--{id}`) di dalam `.page-backdrop` (`position: fixed`, `z-index: -1`, `pointer-events: none`). Hanya lapisan tema aktif yang mendapat kelas `is-active`; mengganti tema berarti crossfade `opacity` 0,9 detik (`--backdrop-fade`) tanpa memasang/membongkar elemen. Lapisan tidak aktif memakai `visibility: hidden` sehingga tidak dirender dan animasinya berhenti. Tiap lapisan tersusun dari:
+
+- elemen itu sendiri: gradien latar (CSS murni),
+- `::before`: ubin partikel SVG kecil yang digeser hanya dengan `transform: translate3d` (hemat, berjalan di compositor, 60 FPS),
+- `::after`: siluet SVG inline statis yang diulang horizontal (tanpa animasi, tanpa file gambar eksternal).
+
+**Kait gaya untuk pengembang:**
+
+- `<html data-page-theme="{id}">` diatur `App.jsx`; gunakan untuk aturan CSS yang bergantung pada tema.
+- `--page-ink` dan `--page-ink-soft` adalah warna teks yang langsung berada di atas latar (judul lobi, judul dan keterangan papan di layar permainan). Nilainya ditentukan per tema di `backdrop.css`. Teks yang berada di kartu/panel putih tetap memakai `text-wa-ink`.
+- `--tile`, `--fx-anim`, `--fx-dur`, `--sil-h` mengatur ukuran ubin partikel, animasi, durasi, dan tinggi siluet tiap lapisan.
+- `BOARD_THEMES[i].backdrop` menamai lapisan yang dipakai tema itu.
+
+**Keterbacaan dan performa.** Latar berada di belakang semua konten dan tidak menerima klik, jadi tidak pernah menutupi papan atau tombol; kartu, papan, dan panel tetap buram. Semua latar dibuat cukup gelap untuk teks terang, ditambah vignette tipis di tepi. Tombol di header layar permainan memakai latar putih agar terbaca di semua tema. Tidak ada `filter`/`blur` dan tidak ada gambar eksternal; seluruh grafis latar sekitar 32 KB CSS (±5 KB setelah gzip). Pengguna dengan `prefers-reduced-motion` tidak mendapat partikel bergerak dan crossfade menjadi nyaris instan.
+
+Pada mode Mobile (`data-layout='mobile'`), kolom selebar ponsel tidak lagi mengecat kanvas buram, sehingga latar tampak di seluruh lebar layar.
+
+### Musik per tema
+
+Setiap tema juga memilih musik latarnya sendiri lewat field `bgm` di `BOARD_THEMES` (preset ada di `src/data/bgmPresets.js`). Musik berganti dengan crossfade 2,2 detik saat tema diubah dan mengikuti volume/mute di Settings. Tabel preset dan cara kerjanya ada di [AUDIO.md](AUDIO.md).
 
 ## Kustomisasi Bidak
 
@@ -120,10 +158,11 @@ Tambahkan juga style SVG yang sesuai dengan kontur gelap karakter lain agar ilus
 
 ## Panduan Menambah Tema
 
-1. Tambahkan entri ber-ID unik ke `BOARD_THEMES` di `src/data/boardThemes.js`.
+1. Tambahkan entri ber-ID unik ke `BOARD_THEMES` di `src/data/boardThemes.js`, lengkap dengan field `bgm` (id preset di `src/data/bgmPresets.js`) dan `backdrop` (id lapisan latar).
 2. Tambahkan blok `[data-board-theme='id-baru']` di `src/styles/board.css` dan tentukan variabel yang ingin dioverride. Gunakan nama variabel papan yang sudah ada agar kotak, badge, tangga, dan ular tetap konsisten.
 3. (Opsional) Untuk hiasan bentuk khusus, tambahkan komponen kecil dengan kunci ID tema ke `SNAKE_HEADS` dan/atau `LADDER_FINIALS` di `Connections.jsx`. Gunakan kelas `board-orn-a`, `board-orn-b`, `board-orn-line`, dan `board-orn-dark` agar warnanya mengikuti `--accent-1`, `--accent-2`, dan `--cell-ink`.
-4. Pilih warna dengan kontras yang memadai untuk angka kotak dan penanda fitur. `ThemePicker` membuat pratinjau dari daftar `BOARD_THEMES`, sehingga entri baru otomatis tersedia di Settings dan layar persiapan.
+4. Tambahkan lapisan `.page-backdrop__layer--id-baru` dan blok `html[data-page-theme='id-baru']` (`--page-ink`, `--page-ink-soft`) di `src/styles/backdrop.css`, serta preset musik di `bgmPresets.js`. Jalankan `npm run verify:audio` untuk memeriksa kelengkapan.
+5. Pilih warna dengan kontras yang memadai untuk angka kotak dan penanda fitur. `ThemePicker` membuat pratinjau dari daftar `BOARD_THEMES`, sehingga entri baru otomatis tersedia di Settings dan layar persiapan.
 
 Contoh kerangka tema:
 

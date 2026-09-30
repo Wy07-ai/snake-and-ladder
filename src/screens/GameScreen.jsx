@@ -14,7 +14,7 @@ import { useSettings } from '../settings/useSettings.js'
 const playDialogBlip = () => playSfx('dialog')
 
 const OUTLINE_BUTTON =
-  'rounded-md border border-wa-primary font-semibold text-wa-primary transition hover:bg-wa-soft active:scale-95 disabled:cursor-not-allowed disabled:opacity-60'
+  'rounded-md border border-wa-primary bg-wa-paper/95 font-semibold text-wa-primary transition hover:bg-wa-soft active:scale-95 disabled:cursor-not-allowed disabled:opacity-60'
 
 function Leaderboard({ entries }) {
   if (!entries.length) return null
@@ -99,7 +99,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
   const boardCaption = (
     <>
       Papan: {board.emoji} {board.label}
-      {board.procedural && <span className="ml-2 font-mono normal-case tracking-normal text-wa-muted">seed #{board.seed}</span>}
+      {board.procedural && <span className="ml-2 font-mono normal-case tracking-normal opacity-75">seed #{board.seed}</span>}
     </>
   )
 
@@ -164,11 +164,11 @@ function GameScreen({ onBackToLobby = () => {} }) {
           <button className={`${OUTLINE_BUTTON} px-3 py-2 text-sm`} type="button" onClick={onBackToLobby} disabled={isMoving}>
             ← Menu
           </button>
-          <h1 className="text-xl font-bold leading-tight text-wa-ink">Ular Tangga</h1>
+          <h1 className="text-xl font-bold leading-tight text-[var(--page-ink)]">Ular Tangga</h1>
           {muteButton}
         </header>
 
-        <p className="text-center text-xs font-semibold text-wa-primary">{boardCaption}</p>
+        <p className="text-center text-xs font-semibold text-[var(--page-ink-soft)]">{boardCaption}</p>
         {boardSection}
         <RpgDialog compact line={line} players={players} />
         {playerList}
@@ -185,8 +185,8 @@ function GameScreen({ onBackToLobby = () => {} }) {
     >
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-wa-primary">{boardCaption}</p>
-          <h1 className="text-3xl font-bold leading-tight text-wa-ink">Ular Tangga</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--page-ink-soft)]">{boardCaption}</p>
+          <h1 className="text-3xl font-bold leading-tight text-[var(--page-ink)]">Ular Tangga</h1>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <p className="rounded-full bg-wa-soft px-4 py-2 text-sm font-semibold text-wa-primary" aria-live="polite">

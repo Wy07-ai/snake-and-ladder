@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "verify:boards": "node scripts/verify-boards.mjs",
+    "verify:audio": "node scripts/verify-audio.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
