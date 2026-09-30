@@ -68,6 +68,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
     names,
     difficulty: settings.game.difficulty,
     onLine: playDialogBlip,
+    players,
   })
   const {
     currentPlayer,

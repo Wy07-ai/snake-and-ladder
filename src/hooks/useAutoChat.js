@@ -15,7 +15,7 @@ let lineCounter = 0
 // Mengembalikan `line` (baris yang sedang tampil, atau null) dan `triggerEvent`.
 // Baris berikutnya menunggu baris sekarang selesai; antrean dibatasi supaya dialog
 // tidak tertinggal jauh dari jalannya permainan.
-export function useAutoChat({ onLine, names = DEFAULT_NAMES, difficulty = 'medium' } = {}) {
+export function useAutoChat({ onLine, names = DEFAULT_NAMES, difficulty = 'medium', players = [] } = {}) {
   const [line, setLine] = useState(null)
   const queueRef = useRef([])
   const timerRef = useRef(null)
@@ -23,6 +23,7 @@ export function useAutoChat({ onLine, names = DEFAULT_NAMES, difficulty = 'mediu
   const onLineRef = useRef(onLine)
   const namesRef = useRef(names)
   const difficultyRef = useRef(difficulty)
+  const botIdsRef = useRef(new Set())
   const recentReactionsRef = useRef({})
 
   const advance = useCallback(() => {
@@ -55,9 +56,17 @@ export function useAutoChat({ onLine, names = DEFAULT_NAMES, difficulty = 'mediu
     difficultyRef.current = difficulty
   }, [difficulty])
 
+  useEffect(() => {
+    botIdsRef.current = new Set(players.filter((player) => player.type === 'bot').map((player) => player.id))
+  }, [players])
+
   // `extra.target` = pemain lain yang terlibat (mis. yang disalip).
   const triggerEvent = useCallback((eventName, player, extra = {}) => {
-    const reactions = CHAT_TRIGGERS[eventName]
+    const botIds = botIdsRef.current
+    if (!botIds.size) return
+    if (player && player.type !== 'bot' && extra.target?.type !== 'bot') return
+
+    const reactions = CHAT_TRIGGERS[eventName]?.filter((reaction) => botIds.has(reaction.personaId))
     if (!reactions?.length) return
     const chatMultiplier = difficultyRef.current === 'hard' ? 1.5 : difficultyRef.current === 'easy' ? 0.6 : 1
     if (Math.random() > Math.min(1, (EVENT_CHANCE[eventName] ?? 1) * chatMultiplier)) return
