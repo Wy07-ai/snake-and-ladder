@@ -1,0 +1,223 @@
+/* Panel antarmuka (kartu pemain, kontrol dadu, papan peringkat, dialog RPG, modal Pengaturan)
+   yang mengikuti tema aktif. Warna berasal dari variabel --panel-* yang diganti per tema lewat
+   html[data-page-theme='id'] (diatur App.jsx). Tema baru = satu blok variabel di bawah.
+   Transisi warna membuat pergantian tema terasa mulus. */
+
+:root {
+  --panel-bg: rgba(6, 46, 40, 0.72);
+  --panel-bg-strong: rgba(4, 30, 27, 0.92);
+  --panel-border: rgba(37, 211, 102, 0.55);
+  --panel-accent: #25d366;
+  --panel-ink: #f1fff6;
+  --panel-muted: #b6e3c6;
+  --panel-active-bg: rgba(37, 211, 102, 0.24);
+  --panel-glow: rgba(37, 211, 102, 0.35);
+  --panel-btn-ink: #06251f;
+  --panel-danger: #ff6b6b;
+}
+
+html[data-page-theme='classic'] { /* memakai nilai :root */ }
+
+html[data-page-theme='cyberpunk'] {
+  --panel-bg: rgba(10, 13, 36, 0.78);
+  --panel-bg-strong: rgba(7, 9, 26, 0.94);
+  --panel-border: rgba(255, 43, 214, 0.7);
+  --panel-accent: #00f5ff;
+  --panel-ink: #e6fdff;
+  --panel-muted: #8ff3ff;
+  --panel-active-bg: rgba(255, 43, 214, 0.24);
+  --panel-glow: rgba(0, 245, 255, 0.4);
+  --panel-btn-ink: #041018;
+}
+
+html[data-page-theme='jungle'] {
+  --panel-bg: rgba(20, 48, 22, 0.76);
+  --panel-bg-strong: rgba(13, 34, 15, 0.94);
+  --panel-border: rgba(180, 122, 60, 0.85);
+  --panel-accent: #c0eb75;
+  --panel-ink: #f4ffe2;
+  --panel-muted: #cfe8a8;
+  --panel-active-bg: rgba(192, 235, 117, 0.24);
+  --panel-glow: rgba(192, 235, 117, 0.3);
+  --panel-btn-ink: #1a3010;
+}
+
+html[data-page-theme='china'] {
+  --panel-bg: rgba(88, 12, 16, 0.78);
+  --panel-bg-strong: rgba(60, 8, 10, 0.95);
+  --panel-border: rgba(242, 183, 5, 0.85);
+  --panel-accent: #ffd66b;
+  --panel-ink: #fff1cf;
+  --panel-muted: #f2cf8a;
+  --panel-active-bg: rgba(215, 25, 31, 0.5);
+  --panel-glow: rgba(242, 183, 5, 0.35);
+  --panel-btn-ink: #4a0a0d;
+}
+
+html[data-page-theme='christmas'] {
+  --panel-bg: rgba(12, 38, 70, 0.76);
+  --panel-bg-strong: rgba(8, 26, 50, 0.94);
+  --panel-border: rgba(207, 230, 255, 0.7);
+  --panel-accent: #ff6b6b;
+  --panel-ink: #f3f9ff;
+  --panel-muted: #bcd8f5;
+  --panel-active-bg: rgba(215, 25, 31, 0.4);
+  --panel-glow: rgba(207, 230, 255, 0.3);
+  --panel-btn-ink: #0c2646;
+}
+
+html[data-page-theme='halloween'] {
+  --panel-bg: rgba(32, 12, 50, 0.8);
+  --panel-bg-strong: rgba(22, 8, 36, 0.95);
+  --panel-border: rgba(255, 140, 26, 0.8);
+  --panel-accent: #ff9a3c;
+  --panel-ink: #fff0de;
+  --panel-muted: #d9b8f2;
+  --panel-active-bg: rgba(181, 123, 255, 0.28);
+  --panel-glow: rgba(255, 140, 26, 0.35);
+  --panel-btn-ink: #2a0d40;
+}
+
+html[data-page-theme='desert'] {
+  --panel-bg: rgba(72, 42, 14, 0.78);
+  --panel-bg-strong: rgba(50, 28, 8, 0.95);
+  --panel-border: rgba(224, 169, 74, 0.85);
+  --panel-accent: #2ec4b6;
+  --panel-ink: #fff4dc;
+  --panel-muted: #efd3a2;
+  --panel-active-bg: rgba(46, 196, 182, 0.26);
+  --panel-glow: rgba(224, 169, 74, 0.3);
+  --panel-btn-ink: #06302c;
+}
+
+html[data-page-theme='royal'] {
+  --panel-bg: rgba(12, 20, 64, 0.78);
+  --panel-bg-strong: rgba(8, 13, 46, 0.95);
+  --panel-border: rgba(217, 169, 46, 0.85);
+  --panel-accent: #f1cf6b;
+  --panel-ink: #fff8e0;
+  --panel-muted: #d9c98f;
+  --panel-active-bg: rgba(179, 18, 46, 0.42);
+  --panel-glow: rgba(217, 169, 46, 0.35);
+  --panel-btn-ink: #1a1440;
+}
+
+html[data-page-theme='hell'] {
+  --panel-bg: rgba(38, 6, 6, 0.8);
+  --panel-bg-strong: rgba(26, 4, 4, 0.95);
+  --panel-border: rgba(255, 77, 26, 0.8);
+  --panel-accent: #ffb07a;
+  --panel-ink: #ffece0;
+  --panel-muted: #f0b79a;
+  --panel-active-bg: rgba(255, 77, 26, 0.3);
+  --panel-glow: rgba(255, 77, 26, 0.4);
+  --panel-btn-ink: #2a0606;
+}
+
+/* ------------------------------------------------------------------ komponen */
+
+.ui-panel {
+  color: var(--panel-ink);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.6rem;
+  box-shadow: 0 0 14px var(--panel-glow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  backdrop-filter: blur(8px) saturate(1.2);
+  transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
+}
+
+.ui-panel--active {
+  background: var(--panel-active-bg);
+  border-color: var(--panel-accent);
+  box-shadow: 0 0 0 1px var(--panel-accent), 0 0 18px var(--panel-glow);
+}
+
+.ui-ink { color: var(--panel-ink); }
+.ui-muted { color: var(--panel-muted); }
+.ui-accent { color: var(--panel-accent); }
+
+.ui-btn {
+  color: var(--panel-ink);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.1s ease;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.ui-btn:hover:not(:disabled) { background: var(--panel-active-bg); border-color: var(--panel-accent); }
+.ui-btn:active:not(:disabled) { transform: scale(0.96); }
+.ui-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.ui-btn:focus-visible,
+.ui-modal input:focus-visible { outline: 2px solid var(--panel-accent); outline-offset: 2px; }
+
+.ui-btn--primary {
+  color: var(--panel-btn-ink);
+  background: var(--panel-accent);
+  border-color: var(--panel-accent);
+}
+.ui-btn--primary:hover:not(:disabled) { background: var(--panel-accent); filter: brightness(1.1); }
+
+.ui-btn--danger { color: var(--panel-danger); border-color: var(--panel-danger); }
+.ui-btn--danger:hover:not(:disabled) { background: rgba(255, 107, 107, 0.18); border-color: var(--panel-danger); }
+.ui-btn--danger-solid { color: #fff; background: #d64545; border-color: #d64545; }
+.ui-btn--danger-solid:hover:not(:disabled) { background: #e25555; border-color: #e25555; }
+
+.ui-chip {
+  color: var(--panel-ink);
+  background: var(--panel-active-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 9999px;
+  transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+.ui-slider { accent-color: var(--panel-accent); }
+
+/* ------------------------------------------------------------------ dialog RPG */
+/* Bingkai dan latar kotak dialog mengikuti tema (sebelumnya krem + biru tua tetap). */
+.rpg-box {
+  --frame: var(--panel-border);
+  background: linear-gradient(180deg, var(--panel-bg-strong), color-mix(in srgb, var(--panel-bg-strong) 80%, #000));
+  color: var(--panel-ink);
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.55), inset 0 0 0 3px var(--panel-glow);
+}
+.rpg-mood { border-color: var(--panel-accent); }
+
+/* ------------------------------------------------------------------ modal */
+
+.ui-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(3, 5, 16, 0.66);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: ui-fade 0.18s ease both;
+}
+
+.ui-modal {
+  width: min(100%, 26rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: 1.25rem;
+  color: var(--panel-ink);
+  background: var(--panel-bg-strong);
+  border: 2px solid var(--panel-border);
+  border-radius: 1rem;
+  box-shadow: 0 0 32px var(--panel-glow), 0 18px 48px rgba(0, 0, 0, 0.5);
+  animation: ui-pop 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+
+@keyframes ui-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-pop { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-modal-backdrop, .ui-modal { animation: none; }
+  .ui-panel, .ui-btn, .ui-chip { transition: none; }
+}

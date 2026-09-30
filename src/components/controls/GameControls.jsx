@@ -29,13 +29,13 @@ function GameControls({
   )
 
   return (
-    <section className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 rounded-lg border border-wa-primary/10 bg-wa-paper p-4" aria-label="Kontrol permainan">
+    <section className="ui-panel grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 p-4" aria-label="Kontrol permainan">
       <DiceButton value={lastRoll} target={rollingValue} rolling={isRolling} onRoll={onRoll} disabled={!canRoll} />
       <div className="grid justify-items-start gap-2">
-        <p className="text-sm text-wa-muted" aria-live="polite" role="status">{status}</p>
-        {canRoll && <p className="text-xs font-semibold text-wa-primary">Ketuk dadu untuk melempar.</p>}
+        <p className="text-sm ui-muted" aria-live="polite" role="status">{status}</p>
+        {canRoll && <p className="text-xs font-semibold ui-accent">Ketuk dadu untuk melempar.</p>}
         <button
-          className="rounded-md border border-wa-primary px-3 py-1.5 text-sm font-semibold text-wa-primary transition hover:bg-wa-soft disabled:cursor-not-allowed disabled:opacity-60"
+          className="ui-btn px-3 py-1.5 text-sm"
           type="button"
           onClick={onReset}
           disabled={isMoving}

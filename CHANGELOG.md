@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- Header permainan disederhanakan menjadi "Ular Tangga - [Nama Tema]"; teks teknis (papan/seed) dihapus.
+- Kartu pemain, kontrol dadu, papan peringkat, dan dialog RPG kini mengikuti palet tema aktif (`styles/panels.css`, variabel `--panel-*`), tanpa latar putih tetap.
+- Tombol "Menu utama" di layar permainan diganti modal Pengaturan & Jeda (mute, volume Master/BGM/SFX, Lanjutkan Game, Ke Lobby) dengan konfirmasi keluar.
+- Bot tidak memulai giliran baru selama modal terbuka (`paused` di `useGame`).
+
 ### Added
 - Latar halaman penuh yang mengikuti tema papan (9 tema): gradien, partikel bergerak berbasis `transform`, dan siluet SVG inline (labu Halloween, bara Infernal Abyss, skyline neon Cyberpunk, dll.) dengan crossfade `opacity` saat tema berganti. Komponen `ThemeBackdrop`, `styles/backdrop.css`, atribut `data-page-theme` di `<html>`, dan token `--page-ink`/`--page-ink-soft`. Mengikuti `prefers-reduced-motion`. Lihat `docs/CUSTOMIZATION.md`.
 - Musik latar per tema: 9 preset sintesis di `data/bgmPresets.js` (field `bgm` di `BOARD_THEMES`), `setBgmTheme()` di audio engine dengan crossfade 2,2 detik, dan sinkronisasi di `useAudioSync` yang menghormati mute dan volume. Lihat `docs/AUDIO.md`.

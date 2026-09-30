@@ -45,7 +45,7 @@ function nextPaint() {
 // LADDER_CLIMB, SNAKE_BITE, CLUTCH_ZONE, OVERTAKE dengan `extra.target`, GAME_OVER).
 // `onSfx` melaporkan momen untuk efek suara: 'diceRoll', 'step', 'ladder',
 // 'snake', dan 'win'. Keduanya opsional; hook ini tidak tahu apa pun soal audio.
-export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficulty = 'medium', finishMode = DEFAULT_FINISH_MODE, onGameEvent = noop, onSfx = noop } = {}) {
+export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficulty = 'medium', finishMode = DEFAULT_FINISH_MODE, onGameEvent = noop, onSfx = noop, paused = false } = {}) {
   const [playerPositions, setPlayerPositions] = useState(() => createStartPositions(players))
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [lastRoll, setLastRoll] = useState(null)
@@ -196,6 +196,7 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
       || finishedPlayerIds.includes(currentPlayer.id)
       || isMoving
       || isGameOver
+      || paused
     ) return undefined
 
     const timer = window.setTimeout(() => {
@@ -203,7 +204,7 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
     }, getBotThinkDelay(difficulty))
 
     return () => window.clearTimeout(timer)
-  }, [currentPlayer, difficulty, finishedPlayerIds, isGameOver, isMoving, playerPosition, roll])
+  }, [currentPlayer, difficulty, finishedPlayerIds, isGameOver, isMoving, paused, playerPosition, roll])
 
   function resetGame() {
     if (isMovingRef.current) return

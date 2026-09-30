@@ -91,7 +91,7 @@ function DiceButton({ value, target = null, onRoll, disabled = false, rolling = 
 
   return (
     <button
-      className={`dice-btn relative grid size-20 shrink-0 place-items-center rounded-2xl focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-wa-primary disabled:cursor-not-allowed ${
+      className={`dice-btn relative grid size-20 shrink-0 place-items-center rounded-2xl focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[var(--panel-accent)] disabled:cursor-not-allowed ${
         rolling ? 'dice-rolling z-10' : 'disabled:opacity-60'
       }${rolling && target === 6 ? ' dice-six' : ''}`}
       style={{ '--dice-ms': `${DICE_ROLL_MS}ms`, '--dice-peak-ms': `${DICE_PEAK_MS}ms` }}

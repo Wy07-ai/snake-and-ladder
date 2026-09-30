@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import RpgDialog from '../components/chat/RpgDialog.jsx'
 import GameBoard from '../components/board/GameBoard.jsx'
 import GameControls from '../components/controls/GameControls.jsx'
 import PlayerList from '../components/controls/PlayerList.jsx'
+import GameSettingsModal from '../components/game/GameSettingsModal.jsx'
+import { BOARD_THEMES } from '../data/boardThemes.js'
 import { playSfx } from '../audio/audioEngine.js'
 import { resolveBoard } from '../engine/boardResolver.js'
 import { createPlayers } from '../engine/gameEngine.js'
@@ -13,21 +15,20 @@ import { useSettings } from '../settings/useSettings.js'
 // Dua callback ini sengaja berada di luar komponen agar referensinya stabil.
 const playDialogBlip = () => playSfx('dialog')
 
-const OUTLINE_BUTTON =
-  'rounded-md border border-wa-primary bg-wa-paper/95 font-semibold text-wa-primary transition hover:bg-wa-soft active:scale-95 disabled:cursor-not-allowed disabled:opacity-60'
+const OUTLINE_BUTTON = 'ui-btn'
 
 function Leaderboard({ entries }) {
   if (!entries.length) return null
 
   return (
-    <section className="grid gap-2 rounded-lg border border-wa-primary/15 bg-wa-paper p-3" aria-label="Papan peringkat">
-      <h2 className="text-sm font-bold text-wa-ink">Papan peringkat</h2>
+    <section className="ui-panel grid gap-2 p-3" aria-label="Papan peringkat">
+      <h2 className="ui-ink text-sm font-bold">Papan peringkat</h2>
       <ol className="grid gap-1">
         {entries.map((entry) => (
-          <li key={entry.id} className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 border-t border-wa-soft py-1.5 text-sm">
-            <span className="font-bold text-wa-primary">{entry.place}.</span>
-            <span className="truncate font-semibold text-wa-ink">{entry.name}</span>
-            <span className="text-xs text-wa-muted">Kotak {entry.position}</span>
+          <li key={entry.id} className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 border-t border-[var(--panel-border)]/40 py-1.5 text-sm">
+            <span className="ui-accent font-bold">{entry.place}.</span>
+            <span className="ui-ink truncate font-semibold">{entry.name}</span>
+            <span className="ui-muted text-xs">Kotak {entry.position}</span>
           </li>
         ))}
       </ol>
@@ -64,6 +65,22 @@ function GameScreen({ onBackToLobby = () => {} }) {
     [players],
   )
   const isMuted = settings.audio.muted
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const themeTitle = BOARD_THEMES.find((theme) => theme.id === settings.visual.theme)?.title ?? 'Klasik'
+  const openSettings = useCallback(() => setSettingsOpen(true), [])
+  const closeSettings = useCallback(() => setSettingsOpen(false), [])
+
+  // Setelah keluar ke lobby, animasi giliran yang masih berjalan tidak boleh memutar suara lagi.
+  const aliveRef = useRef(true)
+  useEffect(() => {
+    aliveRef.current = true
+    return () => {
+      aliveRef.current = false
+    }
+  }, [])
+  const guardedSfx = useCallback((...args) => {
+    if (aliveRef.current) playSfx(...args)
+  }, [])
   const { line, triggerEvent } = useAutoChat({
     names,
     difficulty: settings.game.difficulty,
@@ -87,21 +104,13 @@ function GameScreen({ onBackToLobby = () => {} }) {
     rollingValue,
     slidingPlayerId,
     turnStatus,
-  } = useGame({ players, board, difficulty: settings.game.difficulty, finishMode: settings.game.finishMode, onGameEvent: triggerEvent, onSfx: playSfx })
+  } = useGame({ players, board, difficulty: settings.game.difficulty, finishMode: settings.game.finishMode, onGameEvent: triggerEvent, onSfx: guardedSfx, paused: settingsOpen })
 
   const handleReset = () => {
     if (isMoving) return
     if (board.procedural) setBoard(resolveBoard(board.presetId))
     resetGame()
   }
-
-  // Nama papan yang dimainkan; papan acak juga menampilkan seed-nya agar bisa diulang.
-  const boardCaption = (
-    <>
-      Papan: {board.emoji} {board.label}
-      {board.procedural && <span className="ml-2 font-mono normal-case tracking-normal opacity-75">seed #{board.seed}</span>}
-    </>
-  )
 
   const muteButton = (
     <button
@@ -113,6 +122,24 @@ function GameScreen({ onBackToLobby = () => {} }) {
     >
       <span aria-hidden="true">{isMuted ? '🔇' : '🔊'}</span>
     </button>
+  )
+
+  const settingsButton = (label) => (
+    <button
+      className={`${OUTLINE_BUTTON} px-4 py-2 text-sm`}
+      type="button"
+      onClick={openSettings}
+      aria-haspopup="dialog"
+      aria-label="Buka pengaturan dan jeda"
+    >
+      <span aria-hidden="true">⚙️</span>{label && <span className="ml-1.5">{label}</span>}
+    </button>
+  )
+
+  const title = `Ular Tangga - ${themeTitle}`
+
+  const modal = settingsOpen && (
+    <GameSettingsModal onResume={closeSettings} onExit={onBackToLobby} />
   )
 
   const boardSection = (
@@ -161,19 +188,19 @@ function GameScreen({ onBackToLobby = () => {} }) {
     return (
       <main className="mx-auto grid min-h-dvh w-full max-w-[30rem] content-start gap-2.5 p-2.5" data-layout="mobile">
         <header className="flex items-center justify-between gap-2">
-          <button className={`${OUTLINE_BUTTON} px-3 py-2 text-sm`} type="button" onClick={onBackToLobby} disabled={isMoving}>
-            ← Menu
-          </button>
-          <h1 className="text-xl font-bold leading-tight text-[var(--page-ink)]">Ular Tangga</h1>
-          {muteButton}
+          <h1 className="min-w-0 truncate text-xl font-bold leading-tight text-[var(--page-ink)]">{title}</h1>
+          <div className="flex shrink-0 items-center gap-2">
+            {muteButton}
+            {settingsButton()}
+          </div>
         </header>
 
-        <p className="text-center text-xs font-semibold text-[var(--page-ink-soft)]">{boardCaption}</p>
         {boardSection}
         <RpgDialog compact line={line} players={players} />
         {playerList}
         <Leaderboard entries={leaderboard} />
         {controls}
+        {modal}
       </main>
     )
   }
@@ -184,18 +211,13 @@ function GameScreen({ onBackToLobby = () => {} }) {
       data-layout="desktop"
     >
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--page-ink-soft)]">{boardCaption}</p>
-          <h1 className="text-3xl font-bold leading-tight text-[var(--page-ink)]">Ular Tangga</h1>
-        </div>
+        <h1 className="text-3xl font-bold leading-tight text-[var(--page-ink)]">{title}</h1>
         <div className="flex flex-wrap items-center gap-3">
-          <p className="rounded-full bg-wa-soft px-4 py-2 text-sm font-semibold text-wa-primary" aria-live="polite">
+          <p className="ui-chip px-4 py-2 text-sm font-semibold" aria-live="polite">
             {turnStatus}
           </p>
           {muteButton}
-          <button className={`${OUTLINE_BUTTON} px-4 py-2 text-sm`} type="button" onClick={onBackToLobby} disabled={isMoving}>
-            ← Menu utama
-          </button>
+          {settingsButton('Pengaturan')}
         </div>
       </header>
 
@@ -210,6 +232,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
           <RpgDialog className="self-start" line={line} players={players} />
         </div>
       </div>
+      {modal}
     </main>
   )
 }

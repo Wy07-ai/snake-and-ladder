@@ -12,15 +12,15 @@ function PlayerList({ className = 'grid-cols-2 sm:grid-cols-4', compact = false,
         return (
           <li
             key={player.id}
-            className={`flex rounded-lg border transition ${
+            className={`ui-panel flex ${isActive ? 'ui-panel--active' : ''} ${
               compact ? 'flex-col items-center gap-0.5 px-1 py-1.5 text-center' : 'items-center gap-2 px-2 py-1.5'
-            } ${isActive ? 'border-wa-primary bg-wa-soft' : 'border-wa-primary/10 bg-wa-paper'}`}
+            }`}
             aria-current={isActive ? 'true' : undefined}
           >
             <Pawn avatar={player.avatar} shape={player.shape} color={player.color} className={compact ? 'size-7 shrink-0' : 'size-8 shrink-0'} />
             <span className="grid w-full min-w-0 leading-tight">
-              <span className={`truncate font-bold text-wa-ink ${compact ? 'text-[11px]' : 'text-sm'}`}>{player.name}</span>
-              <span className={compact ? 'text-[10px] text-wa-muted' : 'text-xs text-wa-muted'}>Kotak {positions[player.id]}</span>
+              <span className={`truncate font-bold ui-ink ${compact ? 'text-[11px]' : 'text-sm'}`}>{player.name}</span>
+              <span className={compact ? 'text-[10px] ui-muted' : 'text-xs ui-muted'}>Kotak {positions[player.id]}</span>
             </span>
           </li>
         )
