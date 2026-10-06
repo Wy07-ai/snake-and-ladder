@@ -166,6 +166,26 @@ html[data-page-theme='hell'] {
 .ui-btn--danger-solid { color: #fff; background: #d64545; border-color: #d64545; }
 .ui-btn--danger-solid:hover:not(:disabled) { background: #e25555; border-color: #e25555; }
 
+.lobby-button {
+  color: var(--panel-ink);
+  background: var(--panel-bg-strong);
+  border-color: var(--panel-border);
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--panel-border) 65%, #000);
+  cursor: pointer;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.lobby-button:hover { background: var(--panel-active-bg); border-color: var(--panel-accent); }
+.lobby-button:active { transform: translateY(4px); box-shadow: 0 2px 0 color-mix(in srgb, var(--panel-border) 65%, #000); }
+.lobby-button:focus-visible { outline: 3px solid var(--panel-accent); outline-offset: 4px; }
+.lobby-button--primary {
+  color: var(--panel-btn-ink);
+  background: var(--panel-accent);
+  border-color: var(--panel-accent);
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--panel-accent) 60%, #000);
+}
+.lobby-button--primary:hover { background: var(--panel-accent); filter: brightness(1.1); }
+.lobby-button--primary:active { box-shadow: 0 2px 0 color-mix(in srgb, var(--panel-accent) 60%, #000); }
+
 .ui-chip {
   color: var(--panel-ink);
   background: var(--panel-active-bg);
