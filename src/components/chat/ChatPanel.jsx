@@ -16,30 +16,30 @@ function ChatPanel({ className = '', memberNames = DEFAULT_MEMBER_NAMES, message
   }, [messages, typingPersona])
 
   return (
-    <aside className={`grid h-[32rem] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-lg border border-wa-primary/15 bg-wa-paper shadow-sm ${className}`} aria-label="Chat grup permainan">
-      <div className="bg-wa-primary px-4 py-3 text-white">
+    <aside className={`themed-chat-panel grid h-[32rem] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-lg border shadow-sm ${className}`} aria-label="Chat grup permainan">
+      <div className="themed-chat-panel__header px-4 py-3">
         <h2 className="text-base font-bold">Ular Tangga</h2>
-        <p className="truncate text-xs text-white/75">{memberNames.join(', ')}</p>
-        <p className="mt-1 min-h-4 text-xs text-[#b9f4ce]" aria-live="polite">
+        <p className="themed-chat-panel__members truncate text-xs">{memberNames.join(', ')}</p>
+        <p className="themed-chat-panel__status mt-1 min-h-4 text-xs" aria-live="polite">
           {typingPersona ? `${typingPersona.name} is typing...` : ' '}
         </p>
       </div>
 
-      <div ref={scrollAreaRef} className="flex min-h-0 flex-col gap-3 overflow-y-auto bg-[#efeae2] p-3">
+      <div ref={scrollAreaRef} className="themed-chat-panel__messages flex min-h-0 flex-col gap-3 overflow-y-auto p-3">
         {messages.map((message) => <ChatMessage key={message.id} message={message} />)}
         {typingPersona && (
-          <div className="flex items-center gap-2 self-start rounded-lg rounded-bl-sm bg-white px-3 py-2 text-xs text-[#66736f] shadow-sm" aria-label={`${typingPersona.name} sedang mengetik`}>
+          <div className="themed-chat-panel__typing flex items-center gap-2 self-start rounded-lg rounded-bl-sm px-3 py-2 text-xs shadow-sm" aria-label={`${typingPersona.name} sedang mengetik`}>
             <span>{typingPersona.avatar}</span>
             <span className="flex gap-1" aria-hidden="true">
-              <i className="size-1 animate-bounce rounded-full bg-[#86938b] [animation-delay:-0.2s]" />
-              <i className="size-1 animate-bounce rounded-full bg-[#86938b] [animation-delay:-0.1s]" />
-              <i className="size-1 animate-bounce rounded-full bg-[#86938b]" />
+              <i className="themed-chat-panel__dot size-1 animate-bounce rounded-full [animation-delay:-0.2s]" />
+              <i className="themed-chat-panel__dot size-1 animate-bounce rounded-full [animation-delay:-0.1s]" />
+              <i className="themed-chat-panel__dot size-1 animate-bounce rounded-full" />
             </span>
           </div>
         )}
       </div>
 
-      <div className="border-t border-wa-primary/10 bg-wa-paper p-3">
+      <div className="themed-chat-panel__footer border-t p-3">
         <ChatInput onSend={onSend} />
       </div>
     </aside>

@@ -196,60 +196,87 @@ html[data-page-theme='hell'] {
 
 .ui-slider { accent-color: var(--panel-accent); }
 
-/* Settings memakai palet tema aktif, termasuk kontrol dan status terpilih. */
-.settings-screen__panel {
+/* Layar sekunder dan kontrol memakai palet tema aktif. */
+.themed-screen__panel {
   color: var(--panel-ink);
   background: var(--panel-bg-strong);
   border: 1px solid var(--panel-border);
   box-shadow: 0 0 18px var(--panel-glow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
 }
-.settings-screen__panel h1 { color: var(--panel-ink); }
-.settings-screen__panel .text-wa-ink { color: var(--panel-ink); }
-.settings-screen__panel .text-wa-muted { color: var(--panel-muted); }
-.settings-screen__panel .text-wa-primary { color: var(--panel-accent); }
-.settings-screen__panel .bg-wa-paper { background-color: var(--panel-bg-strong); }
-.settings-screen__panel .bg-wa-canvas { background-color: var(--panel-bg); }
-.settings-screen__panel .bg-wa-soft { background-color: var(--panel-active-bg); }
-.settings-screen__panel .border-wa-soft { border-color: var(--panel-border); }
-.settings-screen__panel .border-wa-primary { border-color: var(--panel-accent); }
-.settings-screen__panel .settings-section {
+.themed-screen__panel h1 { color: var(--panel-ink); }
+.themed-screen__panel .text-wa-ink { color: var(--panel-ink); }
+.themed-screen__panel .text-wa-muted { color: var(--panel-muted); }
+.themed-screen__panel .text-wa-primary { color: var(--panel-accent); }
+.themed-screen__panel .bg-wa-paper { background-color: var(--panel-bg-strong); }
+.themed-screen__panel .bg-wa-canvas { background-color: var(--panel-bg); }
+.themed-screen__panel .bg-wa-soft { background-color: var(--panel-active-bg); }
+.themed-screen__panel .border-wa-soft { border-color: var(--panel-border); }
+.themed-screen__panel .border-wa-primary { border-color: var(--panel-accent); }
+.themed-screen__panel .settings-section {
   background: var(--panel-bg);
   border-color: var(--panel-border);
 }
-.settings-screen__panel .settings-choice {
+.themed-screen__panel .settings-choice {
   color: var(--panel-ink);
   border-color: var(--panel-border);
   background: var(--panel-bg-strong);
 }
-.settings-screen__panel .settings-choice:hover { border-color: var(--panel-accent); background: var(--panel-active-bg); }
-.settings-screen__panel .settings-choice[aria-checked='true'],
-.settings-screen__panel .settings-choice[aria-pressed='true'] {
+.themed-screen__panel .settings-choice:hover { border-color: var(--panel-accent); background: var(--panel-active-bg); }
+.themed-screen__panel .settings-choice[aria-checked='true'],
+.themed-screen__panel .settings-choice[aria-pressed='true'] {
   border-color: var(--panel-accent);
   background: var(--panel-active-bg);
   box-shadow: inset 0 0 0 1px var(--panel-accent);
 }
-.settings-screen__panel .settings-choice[aria-checked='true'] .text-wa-primary,
-.settings-screen__panel .settings-choice[aria-pressed='true'] .text-wa-primary { color: var(--panel-accent); }
-.settings-screen__panel .settings-choice:focus-visible,
-.settings-screen__panel input:focus-visible { outline-color: var(--panel-accent); }
-.settings-screen__panel .settings-toggle__track { background: var(--panel-border); }
-.settings-screen__panel .settings-toggle[aria-checked='true'] .settings-toggle__track { background: var(--panel-accent); }
-.settings-screen__panel .settings-layout-sketch {
+.themed-screen__panel .settings-choice[aria-checked='true'] .text-wa-primary,
+.themed-screen__panel .settings-choice[aria-pressed='true'] .text-wa-primary { color: var(--panel-accent); }
+.themed-screen__panel .settings-choice:focus-visible,
+.themed-screen__panel input:focus-visible,
+.themed-screen__panel select:focus-visible { outline-color: var(--panel-accent); }
+.themed-screen__panel .settings-toggle__track { background: var(--panel-border); }
+.themed-screen__panel .settings-toggle[aria-checked='true'] .settings-toggle__track { background: var(--panel-accent); }
+.themed-screen__panel .settings-layout-sketch {
   border-color: var(--panel-border);
   background: var(--panel-bg-strong);
 }
-.settings-screen__panel .settings-layout-sketch > span,
-.settings-screen__panel .settings-layout-sketch > span > span {
+.themed-screen__panel .settings-layout-sketch > span,
+.themed-screen__panel .settings-layout-sketch > span > span {
   background-color: color-mix(in srgb, var(--panel-accent) 34%, var(--panel-bg-strong));
 }
-.settings-screen__panel input[type='text'] {
+.themed-screen__panel input[type='text'],
+.themed-screen__panel select {
   color: var(--panel-ink);
   border-color: var(--panel-border);
   background: var(--panel-bg);
 }
-.settings-screen__panel input[type='text']::placeholder { color: var(--panel-muted); }
-.settings-screen__panel input[type='range'] { accent-color: var(--panel-accent); }
+.themed-screen__panel input[type='text']::placeholder { color: var(--panel-muted); }
+.themed-screen__panel input[type='range'] { accent-color: var(--panel-accent); }
+
+.themed-chat-panel {
+  color: var(--panel-ink);
+  border-color: var(--panel-border);
+  background: var(--panel-bg-strong);
+}
+.themed-chat-panel__header { color: var(--panel-btn-ink); background: var(--panel-accent); }
+.themed-chat-panel__members { color: color-mix(in srgb, var(--panel-btn-ink) 72%, transparent); }
+.themed-chat-panel__status { color: var(--panel-btn-ink); opacity: 0.8; }
+.themed-chat-panel__messages { background: var(--panel-bg-strong); }
+.themed-chat-panel__footer { border-color: var(--panel-border); background: var(--panel-bg); }
+.themed-chat-panel__typing { color: var(--panel-muted); background: var(--panel-bg); }
+.themed-chat-panel__dot { background: var(--panel-accent); }
+.chat-message__bubble { transition: background-color 0.4s ease, color 0.4s ease; }
+.chat-message__bubble--human { color: var(--panel-btn-ink); background: var(--panel-accent); }
+.chat-message__bubble--bot { color: var(--panel-ink); background: var(--panel-bg); }
+.chat-message__bubble--system { color: var(--panel-muted); background: var(--panel-active-bg); }
+.chat-message__time { color: var(--panel-muted); opacity: 0.8; }
+.themed-chat-input input {
+  color: var(--panel-ink);
+  border-color: var(--panel-border);
+  background: var(--panel-bg-strong);
+}
+.themed-chat-input input::placeholder { color: var(--panel-muted); }
+.themed-chat-input button { color: var(--panel-btn-ink); background: var(--panel-accent); }
 
 /* ------------------------------------------------------------------ dialog RPG */
 /* Bingkai dan latar kotak dialog mengikuti tema (sebelumnya krem + biru tua tetap). */

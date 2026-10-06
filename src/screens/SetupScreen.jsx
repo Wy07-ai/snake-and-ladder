@@ -17,7 +17,7 @@ function SetupScreen({ onBack, onStart }) {
       onBack={onBack}
       actions={
         <button
-          className="rounded-xl border-2 border-white/40 bg-wa-green px-6 py-2.5 text-base font-bold text-wa-ink shadow-[0_4px_0_0_#128c4a] transition hover:brightness-105 active:translate-y-0.5 active:shadow-[0_2px_0_0_#128c4a] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-wa-primary"
+          className="lobby-button lobby-button--primary rounded-xl border-2 px-6 py-2.5 text-base font-bold"
           type="button"
           onClick={onStart}
         >

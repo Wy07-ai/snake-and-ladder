@@ -25,7 +25,7 @@ function SettingsScreen({ onBack }) {
   const { audio, layout, visual } = settings
 
   return (
-    <ScreenShell title="Settings" icon="⚙️" onBack={onBack} themed>
+    <ScreenShell title="Settings" icon="⚙️" onBack={onBack}>
       <SettingsSection
         id="audio"
         icon="🔊"

@@ -19,7 +19,7 @@ const DIFFICULTIES = [
 
 const CONTROL_LABELS = { human: 'Human', bot: 'COM' }
 const FIELD_CLASS = 'min-w-0 rounded-md border border-wa-primary/20 bg-wa-paper px-3 py-2 text-sm font-semibold text-wa-ink outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-wa-primary'
-const BUTTON_CLASS = 'rounded-md border px-3 py-2 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wa-primary'
+const BUTTON_CLASS = 'settings-choice rounded-md border px-3 py-2 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wa-primary'
 
 function PlayerCompositionCustomizer({ game, names, pawnsBySlot, onGameChange, onNameChange, onPawnChange }) {
   const baseId = useId()
