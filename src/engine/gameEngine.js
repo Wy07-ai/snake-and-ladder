@@ -100,6 +100,10 @@ export function getFinishedStandings(finishedPlayerIds, players) {
   })
 }
 
+export function getRequiredFinisherCount(playerCount) {
+  return Math.min(3, playerCount)
+}
+
 export function getFinalStandings(finishedPlayerIds, players, positions) {
   const finishedStandings = getFinishedStandings(finishedPlayerIds, players)
   const finished = new Set(finishedStandings.map((entry) => entry.id))

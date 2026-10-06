@@ -4,6 +4,7 @@ import GameBoard from '../components/board/GameBoard.jsx'
 import GameControls from '../components/controls/GameControls.jsx'
 import PlayerList from '../components/controls/PlayerList.jsx'
 import GameSettingsModal from '../components/game/GameSettingsModal.jsx'
+import VictoryModal from '../components/game/VictoryModal.jsx'
 import { BOARD_THEMES } from '../data/boardThemes.js'
 import { playSfx } from '../audio/audioEngine.js'
 import { resolveBoard } from '../engine/boardResolver.js'
@@ -106,10 +107,15 @@ function GameScreen({ onBackToLobby = () => {} }) {
     turnStatus,
   } = useGame({ players, board, difficulty: settings.game.difficulty, finishMode: settings.game.finishMode, onGameEvent: triggerEvent, onSfx: guardedSfx, paused: settingsOpen })
 
-  const handleReset = () => {
+  const restartGame = () => {
     if (isMoving) return
+    setSettingsOpen(false)
     if (board.procedural) setBoard(resolveBoard(board.presetId))
     resetGame()
+  }
+  const handleReset = () => {
+    if (isGameOver) return
+    restartGame()
   }
 
   const muteButton = (
@@ -119,6 +125,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
       onClick={toggleMute}
       aria-pressed={isMuted}
       aria-label={isMuted ? 'Nyalakan suara' : 'Matikan suara'}
+      disabled={isGameOver}
     >
       <span aria-hidden="true">{isMuted ? '🔇' : '🔊'}</span>
     </button>
@@ -131,6 +138,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
       onClick={openSettings}
       aria-haspopup="dialog"
       aria-label="Buka pengaturan dan jeda"
+      disabled={isGameOver}
     >
       <span aria-hidden="true">⚙️</span>{label && <span className="ml-1.5">{label}</span>}
     </button>
@@ -138,8 +146,11 @@ function GameScreen({ onBackToLobby = () => {} }) {
 
   const title = `Ular Tangga - ${themeTitle}`
 
-  const modal = settingsOpen && (
+  const modal = settingsOpen && !isGameOver && (
     <GameSettingsModal onResume={closeSettings} onExit={onBackToLobby} />
+  )
+  const victoryModal = isGameOver && leaderboard.length > 0 && (
+    <VictoryModal entries={leaderboard} onPlayAgain={restartGame} onExit={onBackToLobby} />
   )
 
   const boardSection = (
@@ -201,6 +212,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
         <Leaderboard entries={leaderboard} />
         {controls}
         {modal}
+        {victoryModal}
       </main>
     )
   }
@@ -233,6 +245,7 @@ function GameScreen({ onBackToLobby = () => {} }) {
         </div>
       </div>
       {modal}
+      {victoryModal}
     </main>
   )
 }

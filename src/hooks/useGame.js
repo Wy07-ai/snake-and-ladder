@@ -14,6 +14,7 @@ import {
   hasBonusRoll,
   getNextActivePlayerIndex,
   getQuickFinishStandings,
+  getRequiredFinisherCount,
   resolveSpecialSquare,
   rollDice,
 } from '../engine/gameEngine.js'
@@ -137,7 +138,6 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
 
       if (position === 100) {
         setExtraRollAvailable(false)
-        onSfx('win')
         if (finishMode === 'quick') {
           setFinalStandings(getQuickFinishStandings(
             players,
@@ -145,20 +145,19 @@ export function useGame({ players = GAME_PLAYERS, board = DEFAULT_BOARD, difficu
             currentPlayer.id,
           ))
           setGameWinner(currentPlayer)
+          onSfx('win')
           onGameEvent('GAME_OVER', currentPlayer)
         } else {
           const nextPositions = { ...playerPositions, [currentPlayer.id]: 100 }
           const nextFinishedPlayerIds = finishedPlayerIds.includes(currentPlayer.id)
             ? finishedPlayerIds
             : [...finishedPlayerIds, currentPlayer.id]
-          const remainingPlayers = players.filter((player) =>
-            !nextFinishedPlayerIds.includes(player.id) && nextPositions[player.id] < 100,
-          )
           setFinishedPlayerIds(nextFinishedPlayerIds)
-          if (remainingPlayers.length <= 1) {
+          if (nextFinishedPlayerIds.length >= getRequiredFinisherCount(players.length)) {
             const winner = players.find((player) => player.id === nextFinishedPlayerIds[0])
             setFinalStandings(getFinalStandings(nextFinishedPlayerIds, players, nextPositions))
             setGameWinner(winner)
+            onSfx('win')
             onGameEvent('GAME_OVER', winner)
           } else {
             setCurrentPlayerIndex(getNextActivePlayerIndex(
