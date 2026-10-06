@@ -8,7 +8,7 @@ function LayoutSketch({ mode }) {
 
   if (mode === 'mobile') {
     return (
-      <span className="mx-auto grid h-24 w-14 grid-rows-[auto_1fr_auto_auto] gap-1 rounded-lg border-2 border-wa-primary/50 bg-white p-1" aria-hidden="true">
+      <span className="settings-layout-sketch mx-auto grid h-24 w-14 grid-rows-[auto_1fr_auto_auto] gap-1 rounded-lg border-2 border-wa-primary/50 bg-white p-1" aria-hidden="true">
         <span className="h-1.5 rounded-[2px] bg-wa-primary/30" />
         <span className={`aspect-square w-full ${board}`} />
         <span className={`h-3 ${block}`} />
@@ -18,7 +18,7 @@ function LayoutSketch({ mode }) {
   }
 
   return (
-    <span className="mx-auto grid h-24 w-40 grid-cols-[1.4fr_1fr] gap-1.5 rounded-lg border-2 border-wa-primary/50 bg-white p-1.5" aria-hidden="true">
+    <span className="settings-layout-sketch mx-auto grid h-24 w-40 grid-cols-[1.4fr_1fr] gap-1.5 rounded-lg border-2 border-wa-primary/50 bg-white p-1.5" aria-hidden="true">
       <span className={`h-full ${board}`} />
       <span className="grid grid-rows-[auto_auto_1fr] gap-1">
         <span className={`h-3 ${block}`} />
@@ -40,7 +40,7 @@ function LayoutModePicker({ value, onChange }) {
         return (
           <button
             key={mode.id}
-            className={`grid content-start gap-3 rounded-xl border-2 p-3 text-left transition focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-wa-primary ${
+            className={`settings-choice grid content-start gap-3 rounded-xl border-2 p-3 text-left transition focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-wa-primary ${
               selected ? 'border-wa-primary bg-wa-soft' : 'border-wa-soft bg-wa-paper hover:bg-wa-canvas'
             }`}
             type="button"

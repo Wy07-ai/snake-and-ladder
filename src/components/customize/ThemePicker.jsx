@@ -12,7 +12,7 @@ function ThemePicker({ value, onChange }) {
         return (
           <button
             key={theme.id}
-            className={`grid content-start gap-2 rounded-xl border-2 p-2 text-left transition focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-wa-primary ${
+            className={`settings-choice grid content-start gap-2 rounded-xl border-2 p-2 text-left transition focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-wa-primary ${
               selected ? 'border-wa-primary bg-wa-soft' : 'border-wa-soft bg-wa-paper hover:bg-wa-canvas'
             }`}
             type="button"

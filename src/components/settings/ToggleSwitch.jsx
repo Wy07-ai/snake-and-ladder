@@ -2,7 +2,7 @@
 function ToggleSwitch({ label, checked, onChange, onText = 'Aktif', offText = 'Nonaktif' }) {
   return (
     <button
-      className={`flex w-full items-center justify-between gap-3 rounded-lg border-2 px-4 py-3 text-left transition focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-wa-primary ${
+      className={`settings-choice settings-toggle flex w-full items-center justify-between gap-3 rounded-lg border-2 px-4 py-3 text-left transition focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-wa-primary ${
         checked ? 'border-wa-primary bg-wa-soft' : 'border-wa-soft bg-wa-paper hover:bg-wa-canvas'
       }`}
       type="button"
@@ -17,7 +17,7 @@ function ToggleSwitch({ label, checked, onChange, onText = 'Aktif', offText = 'N
         </span>
       </span>
       <span
-        className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? 'bg-wa-primary' : 'bg-wa-muted/50'}`}
+        className={`settings-toggle__track relative h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? 'bg-wa-primary' : 'bg-wa-muted/50'}`}
         aria-hidden="true"
       >
         <span
