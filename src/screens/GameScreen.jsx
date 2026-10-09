@@ -149,8 +149,13 @@ function GameScreen({ onBackToLobby = () => {} }) {
   const modal = settingsOpen && !isGameOver && (
     <GameSettingsModal onResume={closeSettings} onExit={onBackToLobby} />
   )
-  const victoryModal = isGameOver && leaderboard.length > 0 && (
-    <VictoryModal entries={leaderboard} onPlayAgain={restartGame} onExit={onBackToLobby} />
+  const victoryEntries = leaderboard.length > 0
+    ? leaderboard
+    : gameWinner
+      ? [{ ...gameWinner, place: 1, position: playerPositions[gameWinner.id] ?? 0 }]
+      : []
+  const victoryModal = isGameOver && (
+    <VictoryModal entries={victoryEntries} onPlayAgain={restartGame} onExit={onBackToLobby} />
   )
 
   const boardSection = (
