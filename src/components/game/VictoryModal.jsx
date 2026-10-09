@@ -45,10 +45,23 @@ function VictoryModal({ entries, onPlayAgain, onExit }) {
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <header className="grid justify-items-center gap-1 text-center">
-          <span className="victory-modal__trophy" aria-hidden="true">🏆</span>
-          <h2 id={titleId} className="text-2xl font-extrabold">Permainan Selesai!</h2>
-          {winner && <p className="ui-muted text-sm">{winner.name} menjadi pemenang.</p>}
+        <header className="grid justify-items-center gap-2 text-center">
+          <span className="victory-modal__eyebrow">KEMENANGAN TERKUNCI</span>
+          <div className="victory-modal__hero" aria-hidden="true">
+            {winner && (
+              <Pawn
+                avatar={winner.avatar}
+                shape={winner.shape}
+                color={winner.color}
+                className="victory-modal__winner-art"
+              />
+            )}
+            <span className="victory-modal__trophy">🏆</span>
+          </div>
+          <h2 id={titleId} className="text-2xl font-extrabold">
+            Selamat, {winner?.name ?? 'Pemenang'}!
+          </h2>
+          <p className="ui-muted text-sm">Berhasil menaklukkan papan ular tangga.</p>
         </header>
 
         <ol className="victory-modal__standings grid gap-2" aria-label="Peringkat akhir">
